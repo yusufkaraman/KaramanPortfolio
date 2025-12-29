@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kişisel Finans Takipçisi</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finans">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="icon" type="image/png" href="icon-512.png">
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(96, 165, 250, 0.5);
+            }
+        }
+
+        /* Dynamic Background Animations */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(50px, 30px) scale(1.05);
+            }
+        }
+
+        @keyframes float-slow {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(-40px, 30px) rotate(5deg);
+            }
+
+            66% {
+                transform: translate(30px, -40px) rotate(-5deg);
+            }
+        }
+
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .animate-float {
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .animate-float-slow {
+            animation: float-slow 30s ease-in-out infinite;
+        }
+
+        .animate-float-reverse {
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        .animated-bg {
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a, #1e1b4b, #0f172a);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+        }
+
+        .static-bg {
+            background: #0f172a;
+        }
+
+        /* Light Theme */
+        .light-theme {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+        }
+
+        .light-theme .animated-bg {
+            background: linear-gradient(-45deg, #f8fafc, #e2e8f0, #f8fafc, #dbeafe, #f8fafc);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+        }
+
+        .light-theme .static-bg {
+            background: #f8fafc;
+        }
+
+        .light-theme .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .light-theme .text-white {
+            color: #0f172a !important;
+        }
+
+        .light-theme .text-dark-300,
+        .light-theme .text-dark-400,
+        .light-theme .text-dark-500 {
+            color: #475569 !important;
+        }
+
+        .light-theme .bg-dark-700,
+        .light-theme .bg-dark-800 {
+            background: rgba(241, 245, 249, 0.9) !important;
+        }
+
+        .light-theme .border-dark-600,
+        .light-theme .border-dark-700 {
+            border-color: rgba(203, 213, 225, 0.8) !important;
+        }
+
+        .no-animation .animate-float,
+        .no-animation .animate-float-slow,
+        .no-animation .animate-float-reverse {
+            animation: none !important;
+        }
+
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* Drag and Drop Styles */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .drag-over {
+            border: 2px dashed #60a5fa !important;
+            background: rgba(96, 165, 250, 0.1) !important;
+        }
+
+        /* Print Styles for PDF */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+
+            .glass-card {
+                background: white !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+            }
+
+            .text-white {
+                color: #0f172a !important;
+            }
+
+            .text-dark-300,
+            .text-dark-400,
+            .text-dark-500 {
+                color: #475569 !important;
+            }
+
+            .gradient-text {
+                background: none !important;
+                -webkit-text-fill-color: #0f172a !important;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="dark animated-bg min-h-screen font-sans">
+    <div id="app" v-cloak>
+        <!-- Dynamic Background Effects -->
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <!-- Animated floating orbs -->
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl animate-float"></div>
+            <div
+                class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl animate-float-slow">
+            </div>
+            <div class="absolute top-1/2 left-1/2 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-float-reverse">
+            </div>
+            <div class="absolute top-1/4 right-1/3 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-float-slow">
+            </div>
+            <div class="absolute bottom-1/3 left-1/3 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl animate-float">
+            </div>
+            <div
+                class="absolute top-3/4 right-1/4 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl animate-float-reverse">
+            </div>
+        </div>
+
+        <div class="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+            <!-- Header -->
+            <header class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold gradient-text mb-2">
+                    💰 Kişisel Finans Takipçisi
+                </h1>
+                <p class="text-dark-400 text-lg">Portföyünüzü takip edin, yatırımlarınızı yönetin</p>
+
+                <!-- Install App Button -->
+                <button v-if="canInstall" @click="installApp"
+                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Uygulamayı Yükle
+                </button>
+            </header>
+
+            <!-- Summary Cards -->
+            <div class="flex justify-center mb-10">
+                <!-- Total Value Card -->
+                <div class="glass-card rounded-2xl p-8 pulse-glow max-w-md w-full">
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <div
+                            class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-dark-300 text-lg font-medium">Toplam Portföy Değeri</span>
+                    </div>
+                    <div class="text-4xl font-bold text-white text-center">
+                        {{ formatCurrencyDisplay(totalCurrentValue) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4 mb-8">
+                <button @click="showAddModal = true"
+                    class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span class="hidden sm:inline">Varlık Ekle</span>
+                    <span class="sm:hidden">Ekle</span>
+                </button>
+
+                <button @click="fetchAllPrices" :disabled="isLoading"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500 disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none">
+                    <svg class="w-5 h-5" :class="{ 'animate-spin': isLoading }" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="hidden sm:inline">{{ isLoading ? 'Yükleniyor...' : 'Fiyatları Güncelle' }}</span>
+                    <span class="sm:hidden">{{ isLoading ? '...' : 'Güncelle' }}</span>
+                </button>
+
+                <button @click="showManualPriceModal = true"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500 flex-1 sm:flex-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span class="hidden sm:inline">Manuel Fiyat Gir</span>
+                    <span class="sm:hidden">Manuel</span>
+                </button>
+
+                <!-- Export Button -->
+                <button @click="exportData"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span class="hidden sm:inline">Dışa Aktar</span>
+                    <span class="sm:hidden">⬇</span>
+                </button>
+
+                <!-- Import Button -->
+                <label
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span class="hidden sm:inline">İçe Aktar</span>
+                    <span class="sm:hidden">⬆</span>
+                    <input type="file" accept=".json" @change="importData" class="hidden">
+                </label>
+
+                <!-- PDF Report Button -->
+                <button @click="generatePDFReport"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span class="hidden sm:inline">PDF Raporu</span>
+                    <span class="sm:hidden">📄</span>
+                </button>
+
+                <!-- News Button -->
+                <button @click="showNewsModal = true"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                    <span class="hidden sm:inline">Haberler</span>
+                    <span class="sm:hidden">📰</span>
+                </button>
+
+                <!-- Chart Button -->
+                <button @click="showChartModal = true"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                    </svg>
+                    <span class="hidden sm:inline">Grafik</span>
+                    <span class="sm:hidden">📊</span>
+                </button>
+
+                <!-- Currency Selector -->
+                <div class="relative">
+                    <select v-model="selectedCurrency" @change="updateCurrency"
+                        class="appearance-none px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500 cursor-pointer pr-10">
+                        <option value="TRY">🇹🇷 TRY</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                    </select>
+                    <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 pointer-events-none"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Last Update Info -->
+            <div v-if="lastUpdate" class="mb-6 text-dark-400 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Son güncelleme: {{ lastUpdate }}
+            </div>
+
+            <!-- Assets Grid -->
+            <div v-if="assets.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="(asset, index) in assets" :key="asset.id"
+                    class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 cursor-move"
+                    :class="{ 'dragging': dragIndex === index, 'drag-over': dragOverIndex === index }"
+                    :style="heatmapEnabled && asset.currentPrice ? getHeatmapStyle(asset) : {}" draggable="true"
+                    @dragstart="handleDragStart($event, index)" @dragover.prevent="handleDragOver($event, index)"
+                    @dragleave="handleDragLeave" @drop="handleDrop($event, index)" @dragend="handleDragEnd">
+                    <!-- Asset Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                                :class="getAssetTypeClass(asset.type)">
+                                {{ getAssetIcon(asset.type) }}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white">{{ asset.symbol }}</h3>
+                                <p class="text-dark-400 text-sm">{{ getAssetTypeName(asset.type) }}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-1">
+                            <!-- Refresh Button -->
+                            <button @click="refreshSingleAsset(asset)" :disabled="asset.isLoading"
+                                class="p-2 text-dark-500 hover:text-green-400 hover:bg-dark-700 rounded-lg transition-colors disabled:opacity-50">
+                                <svg class="w-5 h-5" :class="{ 'animate-spin': asset.isLoading }" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                            <!-- Edit Button -->
+                            <button @click="openEditModal(asset)"
+                                class="p-2 text-dark-500 hover:text-blue-400 hover:bg-dark-700 rounded-lg transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <!-- Delete Button -->
+                            <button @click="confirmDelete(asset)"
+                                class="p-2 text-dark-500 hover:text-red-400 hover:bg-dark-700 rounded-lg transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Asset Details -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-dark-700">
+                            <span class="text-dark-400 text-sm">Miktar</span>
+                            <span class="text-white font-medium">{{ formatNumber(asset.quantity) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark-700">
+                            <span class="text-dark-400 text-sm">Güncel Fiyat</span>
+                            <span class="text-white font-medium">
+                                {{ asset.currentPrice ? formatCurrencyDisplay(asset.currentPrice) : (asset.isLoading ?
+                                'Yükleniyor...' : 'Fiyat yok') }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark-700">
+                            <span class="text-dark-400 text-sm">Toplam Değer</span>
+                            <div class="text-right">
+                                <span class="text-white font-medium text-lg">
+                                    {{ asset.currentPrice ? formatCurrencyDisplay(asset.quantity * asset.currentPrice) :
+                                    (asset.isLoading ? 'Yükleniyor...' : formatCurrencyDisplay(0)) }}
+                                </span>
+                                <div v-if="heatmapEnabled && asset.currentPrice && getDailyChange(asset)"
+                                    class="text-xs mt-1"
+                                    :class="getDailyChange(asset).isPositive ? 'text-emerald-400' : 'text-red-400'">
+                                    {{ getDailyChange(asset).isPositive ? '▲' : '▼' }}
+                                    {{ getDailyChange(asset).percent }}%
+                                    ({{ getDailyChange(asset).isPositive ? '+' : '' }}{{
+                                    formatCurrencyDisplay(getDailyChange(asset).amount) }})
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="glass-card rounded-2xl p-12 text-center">
+                <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-dark-800 flex items-center justify-center">
+                    <svg class="w-12 h-12 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">Henüz varlık eklenmemiş</h3>
+                <p class="text-dark-400 mb-6">Portföyünüzü oluşturmak için varlık ekleyin</p>
+                <button @click="showAddModal = true"
+                    class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300">
+                    İlk Varlığı Ekle
+                </button>
+            </div>
+
+            <!-- API Usage Footer -->
+            <div class="mt-12 glass-card rounded-xl p-4">
+                <h4 class="text-dark-400 text-xs font-medium mb-3 uppercase tracking-wide">API Kullanımı (Aylık)</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <!-- metals.dev -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-yellow-400">🪙</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-dark-300">metals.dev</span>
+                                <span class="text-dark-400">{{ apiUsage.metals }}/100</span>
+                            </div>
+                            <div class="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-yellow-500 rounded-full transition-all"
+                                    :style="{ width: Math.min((apiUsage.metals / 100) * 100, 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Finnhub -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-blue-400">📈</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-dark-300">Finnhub</span>
+                                <span class="text-dark-400">{{ apiUsage.finnhub }}/60/dk</span>
+                            </div>
+                            <div class="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full transition-all"
+                                    :style="{ width: Math.min((apiUsage.finnhub / 60) * 100, 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Exchange Rate -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-green-400">💵</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-dark-300">exchangerate-api</span>
+                                <span class="text-dark-400">{{ apiUsage.exchange }}/1500</span>
+                            </div>
+                            <div class="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 rounded-full transition-all"
+                                    :style="{ width: Math.min((apiUsage.exchange / 1500) * 100, 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- CoinAPI -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-orange-400">₿</span>
+                        <div class="flex-1">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-dark-300">CoinAPI</span>
+                                <span class="text-dark-400">{{ apiUsage.coinapi }}/100</span>
+                            </div>
+                            <div class="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-orange-500 rounded-full transition-all"
+                                    :style="{ width: Math.min((apiUsage.coinapi / 100) * 100, 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-dark-500 text-xs mt-3">* Limitler her ay sıfırlanır. Sayılar tahminidir.</p>
+            </div>
+
+            <!-- Add Asset Modal -->
+            <transition name="fade">
+                <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeAddModal"></div>
+                    <div
+                        class="relative glass-card rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin">
+                        <button @click="closeAddModal"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <h2 class="text-2xl font-bold text-white mb-6">Yeni Varlık Ekle</h2>
+
+                        <form @submit.prevent="addAsset" class="space-y-5">
+                            <!-- Asset Type -->
+                            <div>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">Varlık Türü</label>
+                                <select v-model="newAsset.type"
+                                    class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                    <option value="gold">Altın (Gram)</option>
+                                    <option value="currency">Döviz (USD/EUR)</option>
+                                    <option value="stock">Hisse Senedi (NASDAQ)</option>
+                                    <option value="bist">BIST Hisse (THY, GARAN, vb.)</option>
+                                    <option value="crypto">Kripto (BTC/ETH/Altcoin)</option>
+                                </select>
+                            </div>
+
+                            <!-- Symbol -->
+                            <div>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">Sembol</label>
+                                <input v-model="newAsset.symbol" type="text"
+                                    :placeholder="getSymbolPlaceholder(newAsset.type)"
+                                    class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    required>
+                                <p class="mt-1 text-dark-500 text-xs">{{ getSymbolHint(newAsset.type) }}</p>
+                            </div>
+
+                            <!-- Quantity -->
+                            <div>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">Miktar</label>
+                                <input v-model="newAsset.quantity" type="text" inputmode="decimal"
+                                    placeholder="Örn: 0.5 veya 0,5"
+                                    class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    required>
+                                <p class="mt-1 text-dark-500 text-xs">Ondalık için nokta (.) veya virgül (,)
+                                    kullanabilirsiniz</p>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
+                                Varlık Ekle
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Edit Asset Modal -->
+            <transition name="fade">
+                <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeEditModal"></div>
+                    <div
+                        class="relative glass-card rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin">
+                        <button @click="closeEditModal"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <h2 class="text-2xl font-bold text-white mb-6">Varlık Düzenle</h2>
+
+                        <div v-if="editingAsset" class="space-y-5">
+                            <!-- Asset Info (Read Only) -->
+                            <div class="p-4 bg-dark-800 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">{{ getAssetIcon(editingAsset.type) }}</span>
+                                    <div>
+                                        <div class="text-white font-bold">{{ editingAsset.symbol }}</div>
+                                        <div class="text-dark-400 text-sm">{{ getAssetTypeName(editingAsset.type) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quantity -->
+                            <div>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">Miktar</label>
+                                <input v-model="editQuantity" type="text" inputmode="decimal"
+                                    placeholder="Örn: 0.5 veya 0,5"
+                                    class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    required>
+                                <p class="mt-1 text-dark-500 text-xs">Ondalık için nokta (.) veya virgül (,)
+                                    kullanabilirsiniz</p>
+                            </div>
+
+                            <button @click="saveEdit"
+                                class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
+                                Kaydet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Delete Confirmation Modal -->
+            <transition name="fade">
+                <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showDeleteModal = false"></div>
+                    <div class="relative glass-card rounded-2xl p-8 w-full max-w-sm text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Varlığı Sil</h3>
+                        <p class="text-dark-400 mb-6" v-if="deletingAsset">
+                            <strong class="text-white">{{ deletingAsset.symbol }}</strong> varlığını silmek
+                            istediğinizden
+                            emin misiniz?
+                        </p>
+                        <div class="flex gap-3">
+                            <button @click="showDeleteModal = false"
+                                class="flex-1 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-colors">
+                                İptal
+                            </button>
+                            <button @click="deleteAsset"
+                                class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Manual Price Modal -->
+            <transition name="fade">
+                <div v-if="showManualPriceModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showManualPriceModal = false">
+                    </div>
+                    <div
+                        class="relative glass-card rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin">
+                        <button @click="showManualPriceModal = false"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <h2 class="text-2xl font-bold text-white mb-6">Manuel Fiyat Güncelle</h2>
+                        <p class="text-dark-400 text-sm mb-6">
+                            API'den fiyat alınamayan varlıklar için manuel fiyat girebilirsiniz.
+                        </p>
+
+                        <div v-if="assets.length === 0" class="text-center text-dark-400 py-8">
+                            Henüz varlık eklenmemiş
+                        </div>
+
+                        <div v-else class="space-y-4">
+                            <div v-for="asset in assets" :key="asset.id" class="p-4 bg-dark-800 rounded-xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl">{{ getAssetIcon(asset.type) }}</span>
+                                        <span class="font-medium text-white">{{ asset.symbol }}</span>
+                                    </div>
+                                    <span class="text-dark-400 text-sm">{{ getAssetTypeName(asset.type) }}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input v-model.number="manualPrices[asset.id]" type="number" step="0.01" min="0"
+                                        :placeholder="asset.currentPrice ? asset.currentPrice.toFixed(2) : 'Fiyat girin'"
+                                        class="flex-1 px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-dark-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <button @click="updateManualPrice(asset.id)"
+                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                        Güncelle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Toast Notification -->
+            <transition name="fade">
+                <div v-if="toast.show" class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-xl shadow-xl max-w-md"
+                    :class="toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'">
+                    <div class="flex items-center gap-3">
+                        <svg v-if="toast.type === 'success'" class="w-5 h-5 text-white" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <svg v-else-if="toast.type === 'error'" class="w-5 h-5 text-white" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <svg v-else class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-white font-medium">{{ toast.message }}</span>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- News Modal -->
+            <transition name="fade">
+                <div v-if="showNewsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showNewsModal = false"></div>
+                    <div class="relative glass-card rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <button @click="showNewsModal = false"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-bold text-white mb-4">📰 Haberler</h2>
+
+                        <div v-if="newsLoading" class="text-center py-8">
+                            <div
+                                class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3">
+                            </div>
+                            <p class="text-dark-400">Haberler yükleniyor...</p>
+                        </div>
+
+                        <div v-else-if="news.length === 0" class="text-center py-8">
+                            <p class="text-dark-400">Haber bulunamadı</p>
+                        </div>
+
+                        <div v-else class="space-y-4">
+                            <a v-for="item in news" :key="item.id" :href="item.url" target="_blank"
+                                class="block glass-card rounded-xl p-4 hover:bg-dark-700 transition-colors">
+                                <div class="flex gap-4">
+                                    <img v-if="item.image" :src="item.image"
+                                        class="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-white font-semibold line-clamp-2 mb-1">{{ item.headline }}</h3>
+                                        <p class="text-dark-400 text-sm line-clamp-2 mb-2">{{ item.summary }}</p>
+                                        <div class="flex items-center gap-2 text-xs text-dark-500">
+                                            <span>{{ item.source }}</span>
+                                            <span>•</span>
+                                            <span>{{ formatNewsDate(item.datetime) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Chart Modal (Enhanced with Tabs) -->
+            <transition name="fade">
+                <div v-if="showChartModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showChartModal = false"></div>
+                    <div class="relative glass-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <button @click="showChartModal = false"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <h2 class="text-2xl font-bold text-white mb-4">📊 Portföy Analizi</h2>
+
+                        <!-- Tabs -->
+                        <div class="flex gap-2 mb-6 border-b border-dark-600 pb-3">
+                            <button @click="chartTab = 'pie'"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                :class="chartTab === 'pie' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
+                                🥧 Dağılım
+                            </button>
+                            <button @click="chartTab = 'performance'"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                :class="chartTab === 'performance' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
+                                📈 Performans
+                            </button>
+                            <button @click="chartTab = 'history'"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                :class="chartTab === 'history' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
+                                📅 Geçmiş
+                            </button>
+                        </div>
+
+                        <div v-if="assets.length === 0" class="text-center py-8">
+                            <p class="text-dark-400">Henüz varlık yok</p>
+                        </div>
+
+                        <!-- Pie Chart Tab -->
+                        <div v-else-if="chartTab === 'pie'" class="flex flex-col items-center">
+                            <!-- Pie Chart SVG -->
+                            <svg viewBox="0 0 200 200" class="w-48 h-48 mb-6">
+                                <circle v-for="(segment, index) in pieChartData" :key="index" cx="100" cy="100" r="80"
+                                    fill="transparent" :stroke="segment.color" stroke-width="40"
+                                    :stroke-dasharray="segment.dashArray" :stroke-dashoffset="segment.offset"
+                                    :transform="'rotate(-90 100 100)'" />
+                            </svg>
+
+                            <!-- Legend -->
+                            <div class="w-full space-y-2">
+                                <div v-for="(item, index) in pieChartLegend" :key="index"
+                                    class="flex items-center justify-between p-2 rounded-lg hover:bg-dark-700">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded" :style="{ backgroundColor: item.color }"></div>
+                                        <span class="text-white">{{ item.label }}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-white font-medium">{{ formatCurrencyDisplay(item.value)
+                                            }}</span>
+                                        <span class="text-dark-400 text-sm ml-2">({{ item.percent }}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Tab -->
+                        <div v-else-if="chartTab === 'performance'" class="space-y-4">
+                            <!-- Total Portfolio Performance -->
+                            <div class="glass-card rounded-xl p-4 mb-4">
+                                <h3 class="text-white font-semibold mb-3">Toplam Portföy</h3>
+                                <div class="text-3xl font-bold text-white mb-2">{{
+                                    formatCurrencyDisplay(totalCurrentValue) }}</div>
+                                <div v-if="getTotalDailyChange()" class="text-lg"
+                                    :class="getTotalDailyChange().isPositive ? 'text-emerald-400' : 'text-red-400'">
+                                    {{ getTotalDailyChange().isPositive ? '▲' : '▼' }}
+                                    {{ getTotalDailyChange().percent }}%
+                                    ({{ getTotalDailyChange().isPositive ? '+' : '' }}{{
+                                    formatCurrencyDisplay(getTotalDailyChange().amount) }})
+                                    <span class="text-dark-400 text-sm ml-2">bugün</span>
+                                </div>
+                                <div v-else class="text-dark-400 text-sm">Günlük değişim hesaplanıyor...</div>
+                            </div>
+
+                            <!-- Per-Asset Performance -->
+                            <h4 class="text-dark-300 text-sm font-medium">Varlık Bazında Performans</h4>
+                            <div v-for="asset in assets" :key="asset.id"
+                                class="flex items-center justify-between p-3 rounded-lg hover:bg-dark-700">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl">{{ getAssetIcon(asset.type) }}</span>
+                                    <div>
+                                        <div class="text-white font-medium">{{ asset.symbol }}</div>
+                                        <div class="text-dark-400 text-sm">{{ asset.name || getAssetTypeName(asset.type)
+                                            }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-medium">{{ asset.currentPrice ?
+                                        formatCurrencyDisplay(asset.quantity * asset.currentPrice) : '-' }}</div>
+                                    <div v-if="getDailyChange(asset)" class="text-sm"
+                                        :class="getDailyChange(asset).isPositive ? 'text-emerald-400' : 'text-red-400'">
+                                        {{ getDailyChange(asset).isPositive ? '+' : '-' }}{{
+                                        getDailyChange(asset).percent }}%
+                                    </div>
+                                    <div v-else class="text-dark-500 text-sm">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History Tab -->
+                        <div v-else-if="chartTab === 'history'" class="text-center py-8">
+                            <div class="text-6xl mb-4">📅</div>
+                            <h3 class="text-white font-semibold mb-2">Geçmiş Grafik</h3>
+                            <p class="text-dark-400 text-sm mb-4">Portföy değerinin zaman içindeki değişimi</p>
+                            <div class="glass-card rounded-xl p-6">
+                                <p class="text-dark-500">Yakında eklenecek...</p>
+                                <p class="text-dark-600 text-xs mt-2">Geçmiş veriler kaydedilmeye başlandı.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Settings Button (Fixed Bottom Right) -->
+            <div class="fixed bottom-6 right-6 z-50">
+                <!-- Settings Icon Button -->
+                <button @click="showSettingsMenu = !showSettingsMenu"
+                    class="w-14 h-14 rounded-full glass-card shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 border border-dark-500">
+                    <svg class="w-6 h-6 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+
+                <!-- Settings Popup -->
+                <transition name="fade">
+                    <div v-if="showSettingsMenu"
+                        class="absolute bottom-16 right-0 glass-card rounded-xl p-4 shadow-xl min-w-[220px] border border-dark-500">
+                        <h4 class="text-white font-semibold mb-4 text-sm">⚙️ Ayarlar</h4>
+
+                        <!-- Theme Toggle -->
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">{{ isDarkTheme ? '🌙' : '☀️' }}</span>
+                                <span class="text-dark-300 text-sm">Tema</span>
+                            </div>
+                            <button @click="toggleTheme"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="isDarkTheme ? 'bg-dark-600' : 'bg-blue-500'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="isDarkTheme ? 'left-1' : 'left-7'"></div>
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Background Toggle -->
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">✨</span>
+                                <span class="text-dark-300 text-sm">Dinamik Arkaplan</span>
+                            </div>
+                            <button @click="toggleDynamicBg"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="dynamicBgEnabled ? 'bg-purple-500' : 'bg-dark-600'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="dynamicBgEnabled ? 'left-7' : 'left-1'"></div>
+                            </button>
+                        </div>
+
+                        <!-- Heatmap Toggle -->
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🌡️</span>
+                                <span class="text-dark-300 text-sm">Isı Haritası</span>
+                            </div>
+                            <button @click="toggleHeatmap"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="heatmapEnabled ? 'bg-orange-500' : 'bg-dark-600'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="heatmapEnabled ? 'left-7' : 'left-1'"></div>
+                            </button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+        </div>
+
+        <script>
+            const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
+
+            createApp({
+                setup() {
+                    // State
+                    const assets = ref([]);
+                    const showAddModal = ref(false);
+                    const showEditModal = ref(false);
+                    const showDeleteModal = ref(false);
+                    const showManualPriceModal = ref(false);
+                    const isLoading = ref(false);
+                    const lastUpdate = ref('');
+                    const manualPrices = reactive({});
+                    const editingAsset = ref(null);
+                    const editQuantity = ref(null);
+                    const deletingAsset = ref(null);
+                    const toast = reactive({
+                        show: false,
+                        message: '',
+                        type: 'info'
+                    });
+
+                    // News state
+                    const showNewsModal = ref(false);
+                    const news = ref([]);
+                    const newsLoading = ref(false);
+
+                    // Chart state
+                    const showChartModal = ref(false);
+                    const chartTab = ref('pie'); // 'pie', 'performance', 'history'
+
+                    // Currency state
+                    const selectedCurrency = ref('TRY');
+                    const exchangeRates = reactive({
+                        TRY: 1,
+                        USD: 1,
+                        EUR: 1
+                    });
+
+                    // Chart colors
+                    const chartColors = ['#60a5fa', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#fb923c', '#22d3ee', '#f87171'];
+
+                    // PWA Install
+                    const canInstall = ref(false);
+                    let deferredPrompt = null;
+
+                    // Listen for install prompt
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        canInstall.value = true;
+                        console.log('✅ PWA install available');
+                    });
+
+                    const installApp = async () => {
+                        if (!deferredPrompt) return;
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            showToast('Uygulama yüklendi!', 'success');
+                            canInstall.value = false;
+                        }
+                        deferredPrompt = null;
+                    };
+
+                    // Theme and Background Settings
+                    const isDarkTheme = ref(true);
+                    const dynamicBgEnabled = ref(true);
+                    const heatmapEnabled = ref(false);
+                    const showSettingsMenu = ref(false);
+
+                    // Load settings from localStorage
+                    const loadSettings = () => {
+                        const savedTheme = localStorage.getItem('finance_tracker_theme');
+                        const savedBg = localStorage.getItem('finance_tracker_dynamic_bg');
+                        const savedHeatmap = localStorage.getItem('finance_tracker_heatmap');
+                        if (savedTheme !== null) isDarkTheme.value = savedTheme === 'dark';
+                        if (savedBg !== null) dynamicBgEnabled.value = savedBg === 'true';
+                        if (savedHeatmap !== null) heatmapEnabled.value = savedHeatmap === 'true';
+                        applySettings();
+                    };
+
+                    // Apply settings to DOM
+                    const applySettings = () => {
+                        const body = document.body;
+                        // Theme
+                        if (isDarkTheme.value) {
+                            body.classList.remove('light-theme');
+                        } else {
+                            body.classList.add('light-theme');
+                        }
+                        // Dynamic background
+                        if (dynamicBgEnabled.value) {
+                            body.classList.remove('no-animation', 'static-bg');
+                            body.classList.add('animated-bg');
+                        } else {
+                            body.classList.add('no-animation', 'static-bg');
+                            body.classList.remove('animated-bg');
+                        }
+                    };
+
+                    // Toggle functions
+                    const toggleTheme = () => {
+                        isDarkTheme.value = !isDarkTheme.value;
+                        localStorage.setItem('finance_tracker_theme', isDarkTheme.value ? 'dark' : 'light');
+                        applySettings();
+                    };
+
+                    const toggleDynamicBg = () => {
+                        dynamicBgEnabled.value = !dynamicBgEnabled.value;
+                        localStorage.setItem('finance_tracker_dynamic_bg', dynamicBgEnabled.value ? 'true' : 'false');
+                        applySettings();
+                    };
+
+                    const toggleHeatmap = () => {
+                        heatmapEnabled.value = !heatmapEnabled.value;
+                        localStorage.setItem('finance_tracker_heatmap', heatmapEnabled.value ? 'true' : 'false');
+                    };
+
+                    // Heatmap style based on asset value relative to portfolio
+                    const getHeatmapStyle = (asset) => {
+                        const total = totalCurrentValue.value;
+                        if (total === 0 || !asset.currentPrice) return {};
+
+                        const assetValue = asset.quantity * asset.currentPrice;
+                        const percentage = (assetValue / total) * 100;
+
+                        // Map percentage to heatmap color (cold to hot)
+                        let hue, saturation, lightness;
+                        if (percentage >= 40) {
+                            // Hot (red/orange) - large position
+                            hue = 0 + (40 - Math.min(percentage, 60)) * 1.5;
+                            saturation = 80;
+                            lightness = 50;
+                        } else if (percentage >= 20) {
+                            // Warm (yellow/orange)
+                            hue = 30 + (40 - percentage) * 1.5;
+                            saturation = 75;
+                            lightness = 55;
+                        } else if (percentage >= 10) {
+                            // Neutral (green)
+                            hue = 120 - (20 - percentage) * 3;
+                            saturation = 60;
+                            lightness = 45;
+                        } else {
+                            // Cold (blue/cyan) - small position
+                            hue = 180 + (10 - percentage) * 5;
+                            saturation = 50;
+                            lightness = 50;
+                        }
+
+                        return {
+                            borderColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+                            borderWidth: '2px',
+                            boxShadow: `0 0 15px hsla(${hue}, ${saturation}%, ${lightness}%, 0.3)`
+                        };
+                    };
+
+                    // Store for previous day prices
+                    const previousPrices = reactive({});
+                    const PREV_PRICES_KEY = 'finance_tracker_prev_prices';
+
+                    // Load previous prices from localStorage
+                    const loadPreviousPrices = () => {
+                        try {
+                            const saved = localStorage.getItem(PREV_PRICES_KEY);
+                            if (saved) {
+                                const data = JSON.parse(saved);
+                                const today = new Date().toDateString();
+                                // If saved from a different day, use as previous prices
+                                if (data.date !== today) {
+                                    Object.assign(previousPrices, data.prices);
+                                    // Save current as today's baseline
+                                    savePreviousPrices();
+                                } else {
+                                    Object.assign(previousPrices, data.prices);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Previous prices load failed:', e);
+                        }
+                    };
+
+                    // Save current prices as previous
+                    const savePreviousPrices = () => {
+                        try {
+                            const prices = {};
+                            assets.value.forEach(asset => {
+                                if (asset.currentPrice) {
+                                    prices[asset.id] = asset.currentPrice;
+                                }
+                            });
+                            localStorage.setItem(PREV_PRICES_KEY, JSON.stringify({
+                                date: new Date().toDateString(),
+                                prices: prices
+                            }));
+                        } catch (e) {
+                            console.warn('Previous prices save failed:', e);
+                        }
+                    };
+
+                    // Calculate daily change for an asset
+                    const getDailyChange = (asset) => {
+                        const prevPrice = previousPrices[asset.id];
+                        if (!prevPrice || !asset.currentPrice) return null;
+
+                        const prevValue = asset.quantity * prevPrice;
+                        const currentValue = asset.quantity * asset.currentPrice;
+                        const change = currentValue - prevValue;
+                        const percentChange = ((asset.currentPrice - prevPrice) / prevPrice) * 100;
+
+                        return {
+                            amount: change,
+                            percent: Math.abs(percentChange).toFixed(2),
+                            isPositive: change >= 0
+                        };
+                    };
+
+                    // Calculate total portfolio daily change
+                    const getTotalDailyChange = () => {
+                        let totalPrevValue = 0;
+                        let totalCurrentValue = 0;
+                        let hasData = false;
+
+                        assets.value.forEach(asset => {
+                            const prevPrice = previousPrices[asset.id];
+                            if (prevPrice && asset.currentPrice) {
+                                hasData = true;
+                                totalPrevValue += asset.quantity * prevPrice;
+                                totalCurrentValue += asset.quantity * asset.currentPrice;
+                            }
+                        });
+
+                        if (!hasData || totalPrevValue === 0) return null;
+
+                        const change = totalCurrentValue - totalPrevValue;
+                        const percentChange = ((totalCurrentValue - totalPrevValue) / totalPrevValue) * 100;
+
+                        return {
+                            amount: change,
+                            percent: Math.abs(percentChange).toFixed(2),
+                            isPositive: change >= 0
+                        };
+                    };
+
+                    // Drag and Drop state
+                    const dragIndex = ref(null);
+                    const dragOverIndex = ref(null);
+
+                    const handleDragStart = (event, index) => {
+                        dragIndex.value = index;
+                        event.dataTransfer.effectAllowed = 'move';
+                    };
+
+                    const handleDragOver = (event, index) => {
+                        dragOverIndex.value = index;
+                        event.dataTransfer.dropEffect = 'move';
+                    };
+
+                    const handleDragLeave = () => {
+                        dragOverIndex.value = null;
+                    };
+
+                    const handleDrop = (event, dropIndex) => {
+                        const draggedIndex = dragIndex.value;
+                        if (draggedIndex !== null && draggedIndex !== dropIndex) {
+                            const draggedItem = assets.value.splice(draggedIndex, 1)[0];
+                            assets.value.splice(dropIndex, 0, draggedItem);
+                            saveToStorage();
+                            showToast('Sıralama güncellendi', 'success');
+                        }
+                        dragIndex.value = null;
+                        dragOverIndex.value = null;
+                    };
+
+                    const handleDragEnd = () => {
+                        dragIndex.value = null;
+                        dragOverIndex.value = null;
+                    };
+
+                    // PDF Report Generation
+                    const generatePDFReport = () => {
+                        const total = totalCurrentValue.value;
+                        const dailyChange = getTotalDailyChange();
+                        const date = new Date().toLocaleString('tr-TR');
+
+                        const printWindow = window.open('', '_blank');
+                        printWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <title>Portföy Raporu - ${date}</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                                    h1 { color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+                                    .summary { background: #f1f5f9; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                                    .summary h2 { margin: 0 0 10px; color: #1e293b; }
+                                    .total { font-size: 28px; font-weight: bold; color: #0f172a; }
+                                    .change { font-size: 14px; margin-top: 5px; }
+                                    .positive { color: #10b981; }
+                                    .negative { color: #ef4444; }
+                                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                                    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+                                    th { background: #f1f5f9; font-weight: bold; }
+                                    .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 40px; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>💰 Portföy Raporu</h1>
+                                <p>Rapor Tarihi: ${date}</p>
+                                
+                                <div class="summary">
+                                    <h2>Toplam Portföy Değeri</h2>
+                                    <div class="total">${formatCurrency(total)}</div>
+                                    ${dailyChange ? `<div class="change ${dailyChange.isPositive ? 'positive' : 'negative'}">
+                                        ${dailyChange.isPositive ? '▲' : '▼'} ${dailyChange.percent}% 
+                                        (${dailyChange.isPositive ? '+' : ''}${formatCurrency(dailyChange.amount)}) bugün
+                                    </div>` : ''}
+                                </div>
+                                
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Varlık</th>
+                                            <th>Tür</th>
+                                            <th>Miktar</th>
+                                            <th>Fiyat</th>
+                                            <th>Toplam</th>
+                                            <th>Oran</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${assets.value.map(asset => {
+                            const value = asset.quantity * (asset.currentPrice || 0);
+                            const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `<tr>
+                                                <td><strong>${asset.symbol}</strong></td>
+                                                <td>${getAssetTypeName(asset.type)}</td>
+                                                <td>${formatNumber(asset.quantity)}</td>
+                                                <td>${asset.currentPrice ? formatCurrency(asset.currentPrice) : '-'}</td>
+                                                <td>${formatCurrency(value)}</td>
+                                                <td>${percent}%</td>
+                                            </tr>`;
+                        }).join('')}
+                                    </tbody>
+                                </table>
+                                
+                                <div class="footer">
+                                    <p>Bu rapor Kişisel Finans Takipçisi tarafından oluşturulmuştur.</p>
+                                </div>
+                            </body>
+                            </html>
+                        `);
+                        printWindow.document.close();
+                        printWindow.print();
+                    };
+
+                    const newAsset = reactive({
+                        type: 'gold',
+                        symbol: '',
+                        quantity: null
+                    });
+
+                    // API Usage tracking
+                    const API_USAGE_KEY = 'finance_tracker_api_usage';
+                    const apiUsage = reactive({
+                        metals: 0,
+                        finnhub: 0,
+                        exchange: 0,
+                        coinapi: 0,
+                        lastReset: new Date().getMonth()
+                    });
+
+                    // Load API usage from localStorage
+                    const loadApiUsage = () => {
+                        try {
+                            const saved = localStorage.getItem(API_USAGE_KEY);
+                            if (saved) {
+                                const data = JSON.parse(saved);
+                                // Reset if new month
+                                const currentMonth = new Date().getMonth();
+                                if (data.lastReset !== currentMonth) {
+                                    apiUsage.metals = 0;
+                                    apiUsage.finnhub = 0;
+                                    apiUsage.exchange = 0;
+                                    apiUsage.coinapi = 0;
+                                    apiUsage.lastReset = currentMonth;
+                                } else {
+                                    Object.assign(apiUsage, data);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('API usage load failed:', e);
+                        }
+                    };
+
+                    // Save API usage
+                    const saveApiUsage = () => {
+                        try {
+                            localStorage.setItem(API_USAGE_KEY, JSON.stringify(apiUsage));
+                        } catch (e) {
+                            console.warn('API usage save failed:', e);
+                        }
+                    };
+
+                    // Increment API usage
+                    const trackApiCall = (api) => {
+                        if (api === 'metals') apiUsage.metals++;
+                        else if (api === 'finnhub') apiUsage.finnhub++;
+                        else if (api === 'exchange') apiUsage.exchange++;
+                        else if (api === 'coinapi') apiUsage.coinapi++;
+                        saveApiUsage();
+                    };
+
+                    // LocalStorage keys
+                    const STORAGE_KEY = 'finance_tracker_assets';
+                    const PRICES_KEY = 'finance_tracker_prices';
+
+                    // Load from localStorage
+                    const loadFromStorage = () => {
+                        try {
+                            const saved = localStorage.getItem(STORAGE_KEY);
+                            if (saved) {
+                                assets.value = JSON.parse(saved);
+                            }
+                            const savedPrices = localStorage.getItem(PRICES_KEY);
+                            if (savedPrices) {
+                                const prices = JSON.parse(savedPrices);
+                                assets.value.forEach(asset => {
+                                    if (prices[asset.id]) {
+                                        asset.currentPrice = prices[asset.id];
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Veri yüklenirken hata:', e);
+                        }
+                    };
+
+                    // Save to localStorage
+                    const saveToStorage = () => {
+                        try {
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(assets.value));
+                            const prices = {};
+                            assets.value.forEach(asset => {
+                                if (asset.currentPrice) {
+                                    prices[asset.id] = asset.currentPrice;
+                                }
+                            });
+                            localStorage.setItem(PRICES_KEY, JSON.stringify(prices));
+                        } catch (e) {
+                            console.error('Veri kaydedilirken hata:', e);
+                        }
+                    };
+
+                    // Watch for changes
+                    watch(assets, saveToStorage, { deep: true });
+
+                    // Show toast notification
+                    const showToast = (message, type = 'info') => {
+                        toast.message = message;
+                        toast.type = type;
+                        toast.show = true;
+                        setTimeout(() => {
+                            toast.show = false;
+                        }, 3000);
+                    };
+
+                    // Computed values
+                    const totalCurrentValue = computed(() => {
+                        return assets.value.reduce((sum, asset) => {
+                            if (asset.currentPrice) {
+                                return sum + (asset.quantity * asset.currentPrice);
+                            }
+                            return sum;
+                        }, 0);
+                    });
+
+                    // Helper functions
+                    const formatCurrency = (value) => {
+                        return new Intl.NumberFormat('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }).format(value);
+                    };
+
+                    const formatNumber = (value) => {
+                        return new Intl.NumberFormat('tr-TR', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 4
+                        }).format(value);
+                    };
+
+                    const getAssetIcon = (type) => {
+                        switch (type) {
+                            case 'gold': return '🪙';
+                            case 'currency': return '💵';
+                            case 'stock': return '📈';
+                            case 'crypto': return '₿';
+                            case 'bist': return '🇹🇷';
+                            default: return '💰';
+                        }
+                    };
+
+                    const getAssetTypeName = (type) => {
+                        switch (type) {
+                            case 'gold': return 'Altın';
+                            case 'currency': return 'Döviz';
+                            case 'stock': return 'Hisse Senedi';
+                            case 'crypto': return 'Kripto Para';
+                            case 'bist': return 'BIST Hisse';
+                            default: return 'Varlık';
+                        }
+                    };
+
+                    const getAssetTypeClass = (type) => {
+                        switch (type) {
+                            case 'gold': return 'bg-gradient-to-br from-yellow-500 to-amber-600';
+                            case 'currency': return 'bg-gradient-to-br from-emerald-500 to-teal-600';
+                            case 'stock': return 'bg-gradient-to-br from-indigo-500 to-purple-600';
+                            case 'crypto': return 'bg-gradient-to-br from-orange-500 to-red-600';
+                            case 'bist': return 'bg-gradient-to-br from-red-500 to-rose-600';
+                            default: return 'bg-gradient-to-br from-gray-500 to-gray-600';
+                        }
+                    };
+
+                    const getSymbolPlaceholder = (type) => {
+                        switch (type) {
+                            case 'gold': return 'Örn: GAU, XAU';
+                            case 'currency': return 'Örn: USD, EUR';
+                            case 'stock': return 'Örn: AAPL, TSLA, GOOGL';
+                            case 'crypto': return 'Örn: BTC, ETH, SOL, DOGE';
+                            case 'bist': return 'Örn: THYAO, GARAN, AKBNK, BIMAS';
+                            default: return 'Sembol';
+                        }
+                    };
+
+                    const getSymbolHint = (type) => {
+                        switch (type) {
+                            case 'gold': return 'Altın için GAU (Gram Altın) veya XAU kullanabilirsiniz';
+                            case 'currency': return 'Döviz kodu girin (USD, EUR, GBP vb.)';
+                            case 'stock': return 'NASDAQ hisse sembolü girin';
+                            case 'crypto': return 'Kripto para kodu girin (BTC, ETH, SOL, DOGE vb.)';
+                            case 'bist': return 'Borsa İstanbul hisse kodu girin (THYAO, GARAN, AKBNK vb.)';
+                            default: return '';
+                        }
+                    };
+
+                    // Parse quantity that can use comma or period as decimal separator
+                    const parseQuantity = (value) => {
+                        if (typeof value === 'number') return value;
+                        if (typeof value === 'string') {
+                            // Replace comma with period for parsing
+                            return parseFloat(value.replace(',', '.'));
+                        }
+                        return 0;
+                    };
+
+                    // Add asset
+                    const addAsset = async () => {
+                        if (!newAsset.symbol || !newAsset.quantity) {
+                            showToast('Lütfen tüm alanları doldurun', 'error');
+                            return;
+                        }
+
+                        const quantity = parseQuantity(newAsset.quantity);
+                        if (isNaN(quantity) || quantity <= 0) {
+                            showToast('Geçerli bir miktar girin', 'error');
+                            return;
+                        }
+
+                        const asset = {
+                            id: Date.now().toString(),
+                            type: newAsset.type,
+                            symbol: newAsset.symbol.toUpperCase(),
+                            quantity: quantity,
+                            currentPrice: null,
+                            isLoading: true
+                        };
+
+                        assets.value.push(asset);
+                        closeAddModal();
+                        showToast('Varlık eklendi, fiyat yükleniyor...', 'success');
+
+                        // Fetch price for new asset and update UI
+                        try {
+                            const success = await fetchPriceForAsset(asset);
+                            asset.isLoading = false;
+                            if (success) {
+                                saveToStorage();
+                                showToast(`${asset.symbol} fiyatı yüklendi`, 'success');
+                            } else {
+                                showToast(`${asset.symbol} fiyatı alınamadı, manuel girin`, 'info');
+                            }
+                        } catch (e) {
+                            asset.isLoading = false;
+                            console.warn('Price fetch failed:', e);
+                        }
+                    };
+
+                    const closeAddModal = () => {
+                        showAddModal.value = false;
+                        newAsset.type = 'gold';
+                        newAsset.symbol = '';
+                        newAsset.quantity = null;
+                    };
+
+                    // Refresh single asset
+                    const refreshSingleAsset = async (asset) => {
+                        asset.isLoading = true;
+                        try {
+                            const success = await fetchPriceForAsset(asset);
+                            asset.isLoading = false;
+                            if (success) {
+                                lastUpdate.value = new Date().toLocaleString('tr-TR');
+                                saveToStorage();
+                                showToast(`${asset.symbol} fiyatı güncellendi`, 'success');
+                            } else {
+                                showToast(`${asset.symbol} fiyatı alınamadı`, 'error');
+                            }
+                        } catch (e) {
+                            asset.isLoading = false;
+                            showToast(`${asset.symbol} fiyat hatası`, 'error');
+                            console.warn('Refresh failed:', e);
+                        }
+                    };
+
+                    // Edit asset functions
+                    const openEditModal = (asset) => {
+                        editingAsset.value = asset;
+                        editQuantity.value = asset.quantity;
+                        showEditModal.value = true;
+                    };
+
+                    const closeEditModal = () => {
+                        showEditModal.value = false;
+                        editingAsset.value = null;
+                        editQuantity.value = null;
+                    };
+
+                    const saveEdit = () => {
+                        const quantity = parseQuantity(editQuantity.value);
+                        if (isNaN(quantity) || quantity <= 0) {
+                            showToast('Geçerli bir miktar girin', 'error');
+                            return;
+                        }
+                        if (editingAsset.value) {
+                            editingAsset.value.quantity = quantity;
+                            saveToStorage();
+                            showToast('Miktar güncellendi', 'success');
+                            closeEditModal();
+                        }
+                    };
+
+                    // Delete asset functions
+                    const confirmDelete = (asset) => {
+                        deletingAsset.value = asset;
+                        showDeleteModal.value = true;
+                    };
+
+                    const deleteAsset = () => {
+                        if (deletingAsset.value) {
+                            assets.value = assets.value.filter(a => a.id !== deletingAsset.value.id);
+                            showToast('Varlık silindi', 'success');
+                            showDeleteModal.value = false;
+                            deletingAsset.value = null;
+                        }
+                    };
+
+                    // Fetch prices
+                    const fetchPriceForAsset = async (asset) => {
+                        try {
+                            if (asset.type === 'currency') {
+                                // Use exchangerate-api for currency (free, CORS-enabled)
+                                const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${asset.symbol}`);
+                                trackApiCall('exchange');
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (data.rates && data.rates.TRY) {
+                                        asset.currentPrice = data.rates.TRY;
+                                        return true;
+                                    }
+                                }
+                            } else if (asset.type === 'gold') {
+                                const symbol = asset.symbol.toUpperCase();
+                                const METALS_DEV_API_KEY = 'WXVSII9LRDY9DIYNBXLE475YNBXLE';
+
+                                // Use metals.dev API - supports TRY directly!
+                                try {
+                                    const metalsUrl = `https://api.metals.dev/v1/latest?api_key=${METALS_DEV_API_KEY}&currency=TRY&unit=g`;
+
+                                    const metalsResponse = await fetch(metalsUrl, {
+                                        headers: {
+                                            'Accept': 'application/json'
+                                        }
+                                    });
+                                    trackApiCall('metals');
+
+                                    if (metalsResponse.ok) {
+                                        const metalsData = await metalsResponse.json();
+
+                                        // metals.dev returns prices per gram when unit=g
+                                        if (metalsData.metals && metalsData.metals.gold) {
+                                            const goldPricePerGram = metalsData.metals.gold;
+
+                                            if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
+                                                asset.currentPrice = goldPricePerGram;
+                                                console.log(`✅ ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Gram via metals.dev)`);
+                                                return true;
+                                            } else if (symbol === 'XAU' || symbol === 'OUNCE') {
+                                                // Convert gram to troy ounce (1 troy oz = 31.1035 g)
+                                                asset.currentPrice = goldPricePerGram * 31.1035;
+                                                console.log(`✅ ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Ounce via metals.dev)`);
+                                                return true;
+                                            } else if (symbol === 'XAG' || symbol === 'SILVER') {
+                                                // Silver price
+                                                if (metalsData.metals.silver) {
+                                                    asset.currentPrice = metalsData.metals.silver;
+                                                    console.log(`✅ ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Silver via metals.dev)`);
+                                                    return true;
+                                                }
+                                            } else {
+                                                // Default to gold gram price
+                                                asset.currentPrice = goldPricePerGram;
+                                                console.log(`✅ ${symbol}: ₺${asset.currentPrice.toFixed(2)} (defaulting to Gold Gram)`);
+                                                return true;
+                                            }
+                                        }
+                                    } else {
+                                        console.warn('metals.dev returned error:', metalsResponse.status);
+                                    }
+                                } catch (e) {
+                                    console.warn('metals.dev API failed:', e);
+                                }
+
+                                console.warn('Gold API failed');
+                                return false;
+
+                            } else if (asset.type === 'stock') {
+                                const symbol = asset.symbol.toUpperCase();
+
+                                // Finnhub API key from user
+                                const FINNHUB_API_KEY = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
+
+                                // Use Finnhub API directly (CORS enabled)
+                                try {
+                                    const finnhubResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+                                    trackApiCall('finnhub');
+
+                                    if (finnhubResponse.ok) {
+                                        const finnhubData = await finnhubResponse.json();
+                                        if (finnhubData.c && finnhubData.c > 0) { // 'c' is current price
+                                            // Convert USD to TRY
+                                            const usdTryResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                                            if (usdTryResponse.ok) {
+                                                const usdTryData = await usdTryResponse.json();
+                                                const usdToTry = usdTryData.rates.TRY;
+                                                asset.currentPrice = finnhubData.c * usdToTry;
+                                                console.log(`✅ ${symbol}: $${finnhubData.c} = ₺${asset.currentPrice.toFixed(2)}`);
+                                                return true;
+                                            }
+                                        } else {
+                                            console.warn(`Finnhub returned no price for ${symbol}:`, finnhubData);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn('Finnhub API failed:', e);
+                                }
+
+                                console.warn('All stock APIs failed');
+                                return false;
+                            } else if (asset.type === 'crypto') {
+                                const symbol = asset.symbol.toUpperCase();
+
+                                // Map common symbols to CoinGecko IDs
+                                const symbolToId = {
+                                    'BTC': 'bitcoin',
+                                    'ETH': 'ethereum',
+                                    'SOL': 'solana',
+                                    'DOGE': 'dogecoin',
+                                    'XRP': 'ripple',
+                                    'ADA': 'cardano',
+                                    'DOT': 'polkadot',
+                                    'MATIC': 'matic-network',
+                                    'AVAX': 'avalanche-2',
+                                    'LINK': 'chainlink',
+                                    'LTC': 'litecoin',
+                                    'UNI': 'uniswap',
+                                    'SHIB': 'shiba-inu',
+                                    'ATOM': 'cosmos',
+                                    'XLM': 'stellar',
+                                    'TRX': 'tron',
+                                    'NEAR': 'near',
+                                    'APT': 'aptos',
+                                    'ARB': 'arbitrum',
+                                    'OP': 'optimism',
+                                    'PEPE': 'pepe'
+                                };
+
+                                const coinId = symbolToId[symbol] || symbol.toLowerCase();
+
+                                try {
+                                    // Use CoinGecko API - free and CORS-enabled!
+                                    const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=try,usd`);
+                                    trackApiCall('coinapi'); // reuse coinapi counter
+
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        if (data[coinId] && data[coinId].try) {
+                                            asset.currentPrice = data[coinId].try;
+                                            console.log(`✅ ${symbol}: $${data[coinId].usd} = ₺${asset.currentPrice.toFixed(2)}`);
+                                            return true;
+                                        } else {
+                                            console.warn('CoinGecko: coin not found:', coinId);
+                                        }
+                                    } else {
+                                        console.warn('CoinGecko returned error:', response.status);
+                                    }
+                                } catch (e) {
+                                    console.warn('CoinGecko failed:', e);
+                                }
+
+                                console.warn('Crypto API failed for', symbol);
+                                return false;
+                            } else if (asset.type === 'bist') {
+                                const symbol = asset.symbol.toUpperCase();
+
+                                try {
+                                    // Use Yahoo Finance via CORS proxy for BIST stocks (.IS suffix)
+                                    const yahooSymbol = symbol.endsWith('.IS') ? symbol : `${symbol}.IS`;
+                                    const corsProxy = 'https://api.allorigins.win/raw?url=';
+                                    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`;
+
+                                    const response = await fetch(corsProxy + encodeURIComponent(yahooUrl));
+                                    trackApiCall('finnhub'); // reuse finnhub counter
+
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        if (data.chart && data.chart.result && data.chart.result[0]) {
+                                            const result = data.chart.result[0];
+                                            const price = result.meta.regularMarketPrice;
+                                            if (price) {
+                                                asset.currentPrice = price;
+                                                console.log(`✅ BIST ${symbol}: ₺${price.toFixed(2)}`);
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn('Yahoo Finance BIST failed:', e);
+                                }
+
+                                console.warn('BIST API failed for', symbol);
+                                return false;
+                            }
+                        } catch (error) {
+                            console.warn(`Fiyat alınamadı (${asset.symbol}):`, error.message);
+                        }
+                        return false;
+                    };
+
+                    const fetchAllPrices = async () => {
+                        if (assets.value.length === 0) {
+                            showToast('Fiyat güncellenecek varlık yok', 'info');
+                            return;
+                        }
+
+                        isLoading.value = true;
+                        let successCount = 0;
+                        let failCount = 0;
+
+                        for (const asset of assets.value) {
+                            const success = await fetchPriceForAsset(asset);
+                            if (success) {
+                                successCount++;
+                            } else {
+                                failCount++;
+                            }
+                        }
+
+                        isLoading.value = false;
+                        lastUpdate.value = new Date().toLocaleString('tr-TR');
+                        saveToStorage();
+                        savePreviousPrices();
+
+                        if (failCount > 0) {
+                            showToast(`${successCount} başarılı, ${failCount} başarısız. Manuel fiyat girebilirsiniz.`, 'info');
+                        } else {
+                            showToast('Tüm fiyatlar güncellendi', 'success');
+                        }
+                    };
+
+                    // Manual price update
+                    const updateManualPrice = (assetId) => {
+                        const price = manualPrices[assetId];
+                        if (!price || price <= 0) {
+                            showToast('Geçerli bir fiyat girin', 'error');
+                            return;
+                        }
+
+                        const asset = assets.value.find(a => a.id === assetId);
+                        if (asset) {
+                            asset.currentPrice = parseFloat(price);
+                            manualPrices[assetId] = null;
+                            lastUpdate.value = new Date().toLocaleString('tr-TR');
+                            saveToStorage();
+                            showToast(`${asset.symbol} fiyatı güncellendi`, 'success');
+                        }
+                    };
+
+                    // Currency display formatting
+                    const currencySymbols = { TRY: '₺', USD: '$', EUR: '€' };
+
+                    const formatCurrencyDisplay = (value) => {
+                        if (!value) return currencySymbols[selectedCurrency.value] + '0,00';
+                        const converted = value / exchangeRates.TRY * exchangeRates[selectedCurrency.value];
+                        return new Intl.NumberFormat('tr-TR', {
+                            style: 'currency',
+                            currency: selectedCurrency.value,
+                            minimumFractionDigits: 2
+                        }).format(converted);
+                    };
+
+                    // Update currency and fetch exchange rates
+                    const updateCurrency = async () => {
+                        try {
+                            const response = await fetch('https://api.exchangerate-api.com/v4/latest/TRY');
+                            if (response.ok) {
+                                const data = await response.json();
+                                exchangeRates.TRY = 1;
+                                exchangeRates.USD = data.rates.USD;
+                                exchangeRates.EUR = data.rates.EUR;
+                                trackApiCall('exchange');
+                            }
+                        } catch (e) {
+                            console.warn('Exchange rate fetch failed:', e);
+                        }
+                    };
+
+                    // Pie chart data computed
+                    const pieChartData = computed(() => {
+                        const total = assets.value.reduce((sum, a) => sum + (a.currentPrice || 0) * a.quantity, 0);
+                        if (total === 0) return [];
+
+                        const circumference = 2 * Math.PI * 80; // r=80
+                        let offset = 0;
+
+                        return assets.value.map((asset, index) => {
+                            const value = (asset.currentPrice || 0) * asset.quantity;
+                            const percent = value / total;
+                            const segmentLength = circumference * percent;
+                            const result = {
+                                color: chartColors[index % chartColors.length],
+                                dashArray: `${segmentLength} ${circumference - segmentLength}`,
+                                offset: -offset
+                            };
+                            offset += segmentLength;
+                            return result;
+                        });
+                    });
+
+                    // Pie chart legend
+                    const pieChartLegend = computed(() => {
+                        const total = assets.value.reduce((sum, a) => sum + (a.currentPrice || 0) * a.quantity, 0);
+
+                        return assets.value.map((asset, index) => {
+                            const value = (asset.currentPrice || 0) * asset.quantity;
+                            return {
+                                label: asset.symbol,
+                                value: value,
+                                percent: total > 0 ? Math.round(value / total * 100) : 0,
+                                color: chartColors[index % chartColors.length]
+                            };
+                        });
+                    });
+
+                    // Fetch news for owned stocks
+                    const fetchNews = async () => {
+                        newsLoading.value = true;
+                        news.value = [];
+
+                        const FINNHUB_API_KEY = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
+                        const stockAssets = assets.value.filter(a => a.type === 'stock');
+
+                        if (stockAssets.length === 0) {
+                            // Get general market news
+                            try {
+                                const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_API_KEY}`);
+                                trackApiCall('finnhub');
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    news.value = data.slice(0, 10);
+                                }
+                            } catch (e) {
+                                console.warn('News fetch failed:', e);
+                            }
+                        } else {
+                            // Get news for each stock
+                            for (const asset of stockAssets.slice(0, 3)) {
+                                try {
+                                    const response = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${asset.symbol}&from=${getDateDaysAgo(7)}&to=${getDateToday()}&token=${FINNHUB_API_KEY}`);
+                                    trackApiCall('finnhub');
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        news.value.push(...data.slice(0, 3));
+                                    }
+                                } catch (e) {
+                                    console.warn('News fetch failed for', asset.symbol, e);
+                                }
+                            }
+                        }
+                        newsLoading.value = false;
+                    };
+
+                    // Date helpers
+                    const getDateToday = () => new Date().toISOString().split('T')[0];
+                    const getDateDaysAgo = (days) => {
+                        const date = new Date();
+                        date.setDate(date.getDate() - days);
+                        return date.toISOString().split('T')[0];
+                    };
+
+                    const formatNewsDate = (timestamp) => {
+                        return new Date(timestamp * 1000).toLocaleDateString('tr-TR');
+                    };
+
+                    // Watch for news modal open
+                    watch(showNewsModal, (newVal) => {
+                        if (newVal) {
+                            fetchNews();
+                        }
+                    });
+
+
+                    // Export data to JSON file (with folder selection)
+                    const exportData = async () => {
+                        const data = {
+                            assets: assets.value,
+                            apiUsage: apiUsage,
+                            exportDate: new Date().toISOString()
+                        };
+                        const jsonString = JSON.stringify(data, null, 2);
+                        const fileName = `portfolio_${new Date().toISOString().split('T')[0]}.json`;
+
+                        // Try modern File System Access API (allows folder selection)
+                        if ('showSaveFilePicker' in window) {
+                            try {
+                                const handle = await window.showSaveFilePicker({
+                                    suggestedName: fileName,
+                                    types: [{
+                                        description: 'JSON Files',
+                                        accept: { 'application/json': ['.json'] }
+                                    }]
+                                });
+                                const writable = await handle.createWritable();
+                                await writable.write(jsonString);
+                                await writable.close();
+                                showToast('Veriler kaydedildi!', 'success');
+                                return;
+                            } catch (err) {
+                                if (err.name === 'AbortError') {
+                                    // User cancelled
+                                    return;
+                                }
+                                console.warn('Save picker failed, falling back:', err);
+                            }
+                        }
+
+                        // Fallback for older browsers
+                        const blob = new Blob([jsonString], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast('Veriler dışa aktarıldı (İndirilenler klasörüne)', 'success');
+                    };
+
+                    // Import data from JSON file
+                    const importData = (event) => {
+                        const file = event.target.files[0];
+                        if (!file) return;
+
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const data = JSON.parse(e.target.result);
+                                if (data.assets && Array.isArray(data.assets)) {
+                                    assets.value = data.assets;
+                                    if (data.apiUsage) {
+                                        Object.assign(apiUsage, data.apiUsage);
+                                    }
+                                    saveToStorage();
+                                    saveApiUsage();
+                                    showToast(`${data.assets.length} varlık içe aktarıldı`, 'success');
+                                } else {
+                                    showToast('Geçersiz dosya formatı', 'error');
+                                }
+                            } catch (err) {
+                                showToast('Dosya okunamadı', 'error');
+                                console.error('Import error:', err);
+                            }
+                        };
+                        reader.readAsText(file);
+                        event.target.value = ''; // Reset file input
+                    };
+
+                    // Initialize
+                    onMounted(() => {
+                        loadFromStorage();
+                        loadApiUsage();
+                        loadSettings();
+                        loadPreviousPrices();
+                        if (assets.value.length > 0) {
+                            fetchAllPrices();
+                        }
+                    });
+
+                    return {
+                        assets,
+                        showAddModal,
+                        showEditModal,
+                        showDeleteModal,
+                        showManualPriceModal,
+                        isLoading,
+                        lastUpdate,
+                        manualPrices,
+                        toast,
+                        newAsset,
+                        editingAsset,
+                        editQuantity,
+                        deletingAsset,
+                        totalCurrentValue,
+                        formatCurrency,
+                        formatNumber,
+                        getAssetIcon,
+                        getAssetTypeName,
+                        getAssetTypeClass,
+                        getSymbolPlaceholder,
+                        getSymbolHint,
+                        addAsset,
+                        closeAddModal,
+                        openEditModal,
+                        closeEditModal,
+                        saveEdit,
+                        confirmDelete,
+                        deleteAsset,
+                        fetchAllPrices,
+                        refreshSingleAsset,
+                        updateManualPrice,
+                        exportData,
+                        importData,
+                        apiUsage,
+                        canInstall,
+                        installApp,
+                        // News
+                        showNewsModal,
+                        news,
+                        newsLoading,
+                        formatNewsDate,
+                        // Chart
+                        showChartModal,
+                        chartTab,
+                        pieChartData,
+                        pieChartLegend,
+                        getTotalDailyChange,
+                        // Currency
+                        selectedCurrency,
+                        updateCurrency,
+                        formatCurrencyDisplay,
+                        // Theme & Background
+                        isDarkTheme,
+                        dynamicBgEnabled,
+                        heatmapEnabled,
+                        showSettingsMenu,
+                        toggleTheme,
+                        toggleDynamicBg,
+                        toggleHeatmap,
+                        getHeatmapStyle,
+                        getDailyChange,
+                        // Drag and Drop
+                        dragIndex,
+                        dragOverIndex,
+                        handleDragStart,
+                        handleDragOver,
+                        handleDragLeave,
+                        handleDrop,
+                        handleDragEnd,
+                        // PDF Report
+                        generatePDFReport
+                    };
+                }
+            }).mount('#app');
+        </script>
+
+        <!-- Service Worker Registration -->
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then((registration) => {
+                            console.log('✅ Service Worker registered:', registration.scope);
+                        })
+                        .catch((error) => {
+                            console.log('❌ Service Worker registration failed:', error);
+                        });
+                });
+            }
+        </script>
+</body>
+
+</html>
