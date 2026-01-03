@@ -158,16 +158,17 @@
             --bg-secondary: #e2e8f0;
             --text-primary: #0f172a;
             --text-secondary: #475569;
+            background-color: #f8fafc !important;
         }
 
-        .light-theme .animated-bg {
-            background: linear-gradient(-45deg, #f8fafc, #e2e8f0, #f8fafc, #dbeafe, #f8fafc);
+        .light-theme.animated-bg {
+            background: linear-gradient(-45deg, #f8fafc, #e2e8f0, #f8fafc, #dbeafe, #f8fafc) !important;
             background-size: 400% 400%;
             animation: gradient-shift 15s ease infinite;
         }
 
-        .light-theme .static-bg {
-            background: #f8fafc;
+        .light-theme.static-bg {
+            background: #f8fafc !important;
         }
 
         .light-theme .glass-card {
@@ -304,6 +305,27 @@
 
         .print-only {
             display: none;
+        }
+
+        /* Asset Logo Styles */
+        .asset-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+            /* Zoom in slightly to crop off white frames around logos */
+            transform: scale(var(--logo-zoom, 1.10));
+        }
+
+        .asset-logo-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -493,9 +515,15 @@
                     <!-- Asset Header -->
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl overflow-hidden"
                                 :class="getAssetTypeClass(asset.type)">
-                                {{ getAssetIcon(asset.type) }}
+                                <!-- Show logo for stocks and crypto when logos enabled -->
+                                <img v-if="logosEnabled && getAssetLogoUrl(asset)" :src="getAssetLogoUrl(asset)"
+                                    :alt="asset.symbol" class="asset-logo"
+                                    @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'">
+                                <span class="asset-logo-fallback"
+                                    :style="(logosEnabled && getAssetLogoUrl(asset)) ? 'display:none' : ''">{{
+                                    getAssetIcon(asset.type, asset.symbol) }}</span>
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-white">{{ asset.symbol }}</h3>
@@ -1085,6 +1113,33 @@
                                     :class="heatmapEnabled ? 'left-7' : 'left-1'"></div>
                             </button>
                         </div>
+
+                        <!-- Show Logos Toggle -->
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🖼️</span>
+                                <span class="text-dark-300 text-sm">Logo Göster</span>
+                            </div>
+                            <button @click="toggleLogos"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="logosEnabled ? 'bg-green-500' : 'bg-dark-600'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="logosEnabled ? 'left-7' : 'left-1'"></div>
+                            </button>
+                        </div>
+
+                        <!-- Logo Zoom Slider -->
+                        <div v-if="logosEnabled" class="py-2">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm">🔍</span>
+                                    <span class="text-dark-300 text-sm">Logo Zoom</span>
+                                </div>
+                                <span class="text-dark-400 text-xs">{{ logoZoom }}%</span>
+                            </div>
+                            <input type="range" min="0" max="30" step="5" v-model="logoZoom" @input="updateLogoZoom"
+                                class="w-full h-2 bg-dark-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
                     </div>
                 </transition>
             </div>
@@ -1160,6 +1215,8 @@
                     const isDarkTheme = ref(true);
                     const dynamicBgEnabled = ref(true);
                     const heatmapEnabled = ref(false);
+                    const logosEnabled = ref(true);
+                    const logoZoom = ref(10);
                     const showSettingsMenu = ref(false);
 
                     // Load settings from localStorage
@@ -1167,10 +1224,15 @@
                         const savedTheme = localStorage.getItem('finance_tracker_theme');
                         const savedBg = localStorage.getItem('finance_tracker_dynamic_bg');
                         const savedHeatmap = localStorage.getItem('finance_tracker_heatmap');
+                        const savedLogos = localStorage.getItem('finance_tracker_logos');
+                        const savedLogoZoom = localStorage.getItem('finance_tracker_logo_zoom');
                         if (savedTheme !== null) isDarkTheme.value = savedTheme === 'dark';
                         if (savedBg !== null) dynamicBgEnabled.value = savedBg === 'true';
                         if (savedHeatmap !== null) heatmapEnabled.value = savedHeatmap === 'true';
+                        if (savedLogos !== null) logosEnabled.value = savedLogos === 'true';
+                        if (savedLogoZoom !== null) logoZoom.value = parseInt(savedLogoZoom);
                         applySettings();
+                        applyLogoZoom();
                     };
 
                     // Apply settings to DOM
@@ -1208,6 +1270,21 @@
                     const toggleHeatmap = () => {
                         heatmapEnabled.value = !heatmapEnabled.value;
                         localStorage.setItem('finance_tracker_heatmap', heatmapEnabled.value ? 'true' : 'false');
+                    };
+
+                    const toggleLogos = () => {
+                        logosEnabled.value = !logosEnabled.value;
+                        localStorage.setItem('finance_tracker_logos', logosEnabled.value ? 'true' : 'false');
+                    };
+
+                    const applyLogoZoom = () => {
+                        const zoomValue = 1 + (logoZoom.value / 100);
+                        document.documentElement.style.setProperty('--logo-zoom', zoomValue);
+                    };
+
+                    const updateLogoZoom = () => {
+                        applyLogoZoom();
+                        localStorage.setItem('finance_tracker_logo_zoom', logoZoom.value);
                     };
 
                     // Heatmap style based on asset value relative to portfolio
@@ -1586,7 +1663,47 @@
                         }).format(value);
                     };
 
-                    const getAssetIcon = (type) => {
+                    const getAssetIcon = (type, symbol = '') => {
+                        // For currencies, return the currency symbol
+                        if (type === 'currency' && symbol) {
+                            const currencySymbols = {
+                                'USD': '$',
+                                'EUR': '€',
+                                'GBP': '£',
+                                'JPY': '¥',
+                                'CNY': '¥',
+                                'CNH': '¥',
+                                'KRW': '₩',
+                                'INR': '₹',
+                                'RUB': '₽',
+                                'TRY': '₺',
+                                'THB': '฿',
+                                'PLN': 'zł',
+                                'ILS': '₪',
+                                'PHP': '₱',
+                                'VND': '₫',
+                                'UAH': '₴',
+                                'NGN': '₦',
+                                'BTC': '₿',
+                                'CHF': 'Fr',
+                                'SEK': 'kr',
+                                'NOK': 'kr',
+                                'DKK': 'kr',
+                                'BRL': 'R$',
+                                'MXN': '$',
+                                'AUD': 'A$',
+                                'CAD': 'C$',
+                                'NZD': 'NZ$',
+                                'HKD': 'HK$',
+                                'SGD': 'S$',
+                                'TWD': 'NT$',
+                                'ZAR': 'R',
+                                'AED': 'AED',
+                                'SAR': 'SAR'
+                            };
+                            return currencySymbols[symbol.toUpperCase()] || '💵';
+                        }
+
                         switch (type) {
                             case 'gold': return '🪙';
                             case 'currency': return '💵';
@@ -1617,6 +1734,232 @@
                             case 'bist': return 'bg-gradient-to-br from-red-500 to-rose-600';
                             default: return 'bg-gradient-to-br from-gray-500 to-gray-600';
                         }
+                    };
+
+                    // Get logo URL for stocks and crypto
+                    const getAssetLogoUrl = (asset) => {
+                        const symbol = asset.symbol.toUpperCase();
+
+                        if (asset.type === 'crypto') {
+                            // Use CryptoIcons from GitHub (CORS-friendly, reliable)
+                            // Returns PNG icons for most popular cryptocurrencies
+                            return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.toLowerCase()}.png`;
+                        }
+
+                        // Currencies don't use logos - they use currency symbols in getAssetIcon
+                        if (asset.type === 'currency') {
+                            return null;
+                        }
+
+                        if (asset.type === 'stock') {
+                            // Map stock symbols to their company domains for logo lookup
+                            const stockDomains = {
+                                // Tech - NASDAQ
+                                'AAPL': 'apple.com',
+                                'MSFT': 'microsoft.com',
+                                'GOOGL': 'google.com',
+                                'GOOG': 'google.com',
+                                'AMZN': 'amazon.com',
+                                'META': 'meta.com',
+                                'TSLA': 'tesla.com',
+                                'NVDA': 'nvidia.com',
+                                'AMD': 'amd.com',
+                                'INTC': 'intel.com',
+                                'NFLX': 'netflix.com',
+                                'ADBE': 'adobe.com',
+                                'CRM': 'salesforce.com',
+                                'ORCL': 'oracle.com',
+                                'IBM': 'ibm.com',
+                                'CSCO': 'cisco.com',
+                                'QCOM': 'qualcomm.com',
+                                'TXN': 'ti.com',
+                                'AVGO': 'broadcom.com',
+                                'NOW': 'servicenow.com',
+                                'UBER': 'uber.com',
+                                'SPOT': 'spotify.com',
+                                'SQ': 'squareup.com',
+                                'SHOP': 'shopify.com',
+                                'ZM': 'zoom.us',
+                                'DOCU': 'docusign.com',
+                                'SNOW': 'snowflake.com',
+                                'PLTR': 'palantir.com',
+                                'COIN': 'coinbase.com',
+                                'HOOD': 'robinhood.com',
+                                'PYPL': 'paypal.com',
+
+                                // Semiconductors - NYSE
+                                'TSM': 'tsmc.com',
+                                'ASML': 'asml.com',
+                                'MU': 'micron.com',
+                                'LRCX': 'lamresearch.com',
+                                'AMAT': 'appliedmaterials.com',
+                                'KLAC': 'kla.com',
+                                'MRVL': 'marvell.com',
+                                'ON': 'onsemi.com',
+                                'ADI': 'analog.com',
+                                'NXPI': 'nxp.com',
+                                'STM': 'st.com',
+                                'UMC': 'umc.com',
+
+                                // Entertainment & Media
+                                'DIS': 'disney.com',
+                                'WBD': 'wbd.com',
+                                'PARA': 'paramount.com',
+                                'CMCSA': 'comcast.com',
+                                'SONY': 'sony.com',
+                                'EA': 'ea.com',
+                                'TTWO': 'take2games.com',
+                                'RBLX': 'roblox.com',
+
+                                // Automotive
+                                'F': 'ford.com',
+                                'GM': 'gm.com',
+                                'TM': 'toyota.com',
+                                'HMC': 'honda.com',
+                                'RIVN': 'rivian.com',
+                                'LCID': 'lucidmotors.com',
+                                'NIO': 'nio.com',
+                                'LI': 'lixiang.com',
+                                'XPEV': 'xiaopeng.com',
+                                'STLA': 'stellantis.com',
+                                'RACE': 'ferrari.com',
+                                'VWAGY': 'volkswagen.com',
+                                'BMWYY': 'bmw.com',
+                                'MBGYY': 'mercedes-benz.com',
+
+                                // Retail & Consumer
+                                'NKE': 'nike.com',
+                                'SBUX': 'starbucks.com',
+                                'MCD': 'mcdonalds.com',
+                                'KO': 'coca-cola.com',
+                                'PEP': 'pepsico.com',
+                                'WMT': 'walmart.com',
+                                'TGT': 'target.com',
+                                'COST': 'costco.com',
+                                'HD': 'homedepot.com',
+                                'LOW': 'lowes.com',
+                                'LULU': 'lululemon.com',
+                                'GPS': 'gap.com',
+                                'TJX': 'tjx.com',
+                                'ROST': 'rossstores.com',
+                                'DG': 'dollargeneral.com',
+                                'DLTR': 'dollartree.com',
+
+                                // Industrial & Aerospace
+                                'BA': 'boeing.com',
+                                'LMT': 'lockheedmartin.com',
+                                'CAT': 'caterpillar.com',
+                                'DE': 'deere.com',
+                                'GE': 'ge.com',
+                                'MMM': '3m.com',
+                                'RTX': 'rtx.com',
+                                'NOC': 'northropgrumman.com',
+                                'GD': 'gd.com',
+                                'HON': 'honeywell.com',
+                                'UPS': 'ups.com',
+                                'FDX': 'fedex.com',
+
+                                // Healthcare & Pharma
+                                'JNJ': 'jnj.com',
+                                'PFE': 'pfizer.com',
+                                'MRK': 'merck.com',
+                                'ABBV': 'abbvie.com',
+                                'LLY': 'lilly.com',
+                                'UNH': 'unitedhealthgroup.com',
+                                'CVS': 'cvs.com',
+                                'WBA': 'walgreens.com',
+                                'TMO': 'thermofisher.com',
+                                'DHR': 'danaher.com',
+                                'ABT': 'abbott.com',
+                                'BMY': 'bms.com',
+                                'AMGN': 'amgen.com',
+                                'GILD': 'gilead.com',
+                                'MRNA': 'modernatx.com',
+                                'REGN': 'regeneron.com',
+                                'VRTX': 'vrtx.com',
+                                'BIIB': 'biogen.com',
+
+                                // Finance & Banks
+                                'JPM': 'jpmorganchase.com',
+                                'BAC': 'bankofamerica.com',
+                                'WFC': 'wellsfargo.com',
+                                'C': 'citigroup.com',
+                                'GS': 'goldmansachs.com',
+                                'MS': 'morganstanley.com',
+                                'V': 'visa.com',
+                                'MA': 'mastercard.com',
+                                'AXP': 'americanexpress.com',
+                                'BLK': 'blackrock.com',
+                                'SCHW': 'schwab.com',
+                                'USB': 'usbank.com',
+                                'PNC': 'pnc.com',
+                                'TFC': 'truist.com',
+                                'COF': 'capitalone.com',
+                                'AIG': 'aig.com',
+                                'MET': 'metlife.com',
+                                'PRU': 'prudential.com',
+                                'BRK.A': 'berkshirehathaway.com',
+                                'BRK.B': 'berkshirehathaway.com',
+                                'BRK-A': 'berkshirehathaway.com',
+                                'BRK-B': 'berkshirehathaway.com',
+
+                                // Telecom
+                                'T': 'att.com',
+                                'VZ': 'verizon.com',
+                                'TMUS': 't-mobile.com',
+
+                                // Energy
+                                'XOM': 'exxonmobil.com',
+                                'CVX': 'chevron.com',
+                                'COP': 'conocophillips.com',
+                                'SLB': 'slb.com',
+                                'OXY': 'oxy.com',
+                                'EOG': 'eogresources.com',
+                                'PSX': 'phillips66.com',
+                                'VLO': 'valero.com',
+                                'MPC': 'marathonpetroleum.com',
+
+                                // Cloud & Enterprise
+                                'PANW': 'paloaltonetworks.com',
+                                'CRWD': 'crowdstrike.com',
+                                'ZS': 'zscaler.com',
+                                'OKTA': 'okta.com',
+                                'DDOG': 'datadoghq.com',
+                                'NET': 'cloudflare.com',
+                                'MDB': 'mongodb.com',
+                                'TWLO': 'twilio.com',
+                                'TEAM': 'atlassian.com',
+                                'WDAY': 'workday.com',
+                                'SPLK': 'splunk.com',
+                                'VMW': 'vmware.com',
+                                'DELL': 'dell.com',
+                                'HPQ': 'hp.com',
+                                'HPE': 'hpe.com',
+
+                                // Chinese Tech
+                                'BABA': 'alibaba.com',
+                                'JD': 'jd.com',
+                                'PDD': 'pinduoduo.com',
+                                'BIDU': 'baidu.com',
+                                'TCEHY': 'tencent.com',
+
+                                // Other International
+                                'SAP': 'sap.com',
+                                'SHOP': 'shopify.com',
+                                'SE': 'sea.com',
+                                'GRAB': 'grab.com',
+                                'MELI': 'mercadolibre.com'
+                            };
+                            const domain = stockDomains[symbol];
+                            if (domain) {
+                                // Use logo.dev API (CORS-friendly, free tier available)
+                                return `https://img.logo.dev/${domain}?token=pk_X-1ZO13GSgeOoUrIuJ6GMQ`;
+                            }
+                            return null;
+                        }
+
+                        // No logo for gold, currency, BIST - use emoji icons
+                        return null;
                     };
 
                     const getSymbolPlaceholder = (type) => {
@@ -2274,6 +2617,10 @@
                         toggleTheme,
                         toggleDynamicBg,
                         toggleHeatmap,
+                        logosEnabled,
+                        toggleLogos,
+                        logoZoom,
+                        updateLogoZoom,
                         getHeatmapStyle,
                         getDailyChange,
                         // Drag and Drop
@@ -2285,7 +2632,9 @@
                         handleDrop,
                         handleDragEnd,
                         // PDF Report
-                        generatePDFReport
+                        generatePDFReport,
+                        // Asset Logos
+                        getAssetLogoUrl
                     };
                 }
             }).mount('#app');
