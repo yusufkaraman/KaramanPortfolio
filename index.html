@@ -2504,58 +2504,82 @@
 
                         // Company name mappings for better search
                         const stockNames = {
-                            'AAPL': 'Apple', 'MSFT': 'Microsoft', 'GOOGL': 'Google', 'AMZN': 'Amazon',
-                            'META': 'Meta Facebook', 'TSLA': 'Tesla', 'NVDA': 'Nvidia', 'AMD': 'AMD',
-                            'NFLX': 'Netflix', 'TSM': 'TSMC', 'INTC': 'Intel', 'DIS': 'Disney',
-                            'BA': 'Boeing', 'JPM': 'JPMorgan', 'V': 'Visa', 'MA': 'Mastercard',
-                            'KO': 'Coca-Cola', 'PEP': 'Pepsi', 'NKE': 'Nike', 'SBUX': 'Starbucks'
+                            'AAPL': 'Apple stock', 'MSFT': 'Microsoft stock', 'GOOGL': 'Google Alphabet', 'AMZN': 'Amazon stock',
+                            'META': 'Meta Facebook stock', 'TSLA': 'Tesla stock', 'NVDA': 'Nvidia stock', 'AMD': 'AMD stock',
+                            'NFLX': 'Netflix stock', 'TSM': 'TSMC semiconductor', 'INTC': 'Intel stock', 'DIS': 'Disney stock',
+                            'BA': 'Boeing stock', 'JPM': 'JPMorgan bank', 'V': 'Visa stock', 'MA': 'Mastercard stock',
+                            'KO': 'Coca-Cola stock', 'PEP': 'Pepsi stock', 'NKE': 'Nike stock', 'SBUX': 'Starbucks stock'
                         };
 
                         const cryptoNames = {
-                            'BTC': 'Bitcoin', 'ETH': 'Ethereum', 'SOL': 'Solana', 'DOGE': 'Dogecoin',
-                            'XRP': 'Ripple XRP', 'ADA': 'Cardano', 'DOT': 'Polkadot', 'AVAX': 'Avalanche',
-                            'MATIC': 'Polygon', 'LINK': 'Chainlink', 'LTC': 'Litecoin', 'BNB': 'Binance'
+                            'BTC': 'Bitcoin crypto', 'ETH': 'Ethereum crypto', 'SOL': 'Solana crypto', 'DOGE': 'Dogecoin',
+                            'XRP': 'Ripple XRP crypto', 'ADA': 'Cardano crypto', 'DOT': 'Polkadot', 'AVAX': 'Avalanche crypto',
+                            'MATIC': 'Polygon crypto', 'LINK': 'Chainlink', 'LTC': 'Litecoin', 'BNB': 'Binance crypto'
                         };
 
                         // Build search terms
                         let searchTerms = [];
 
-                        stockAssets.slice(0, 5).forEach(a => {
-                            const name = stockNames[a.symbol] || a.symbol;
+                        stockAssets.slice(0, 4).forEach(a => {
+                            const name = stockNames[a.symbol] || `${a.symbol} stock`;
                             searchTerms.push(name);
                         });
 
-                        cryptoAssets.slice(0, 3).forEach(a => {
-                            const name = cryptoNames[a.symbol] || a.symbol;
+                        cryptoAssets.slice(0, 2).forEach(a => {
+                            const name = cryptoNames[a.symbol] || `${a.symbol} crypto`;
                             searchTerms.push(name);
                         });
 
                         // Default to general finance news if no assets
                         if (searchTerms.length === 0) {
-                            searchTerms = ['stock market', 'cryptocurrency', 'finance'];
+                            searchTerms = ['stock market news', 'cryptocurrency news'];
                         }
 
                         try {
-                            // NewsAPI.org request
-                            const query = searchTerms.slice(0, 5).join(' OR ');
-                            const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=15&apiKey=${NEWSAPI_KEY}`;
+                            // Fetch news for each asset separately
+                            let allArticles = [];
 
-                            const response = await fetch(newsUrl);
+                            for (const term of searchTerms.slice(0, 4)) {
+                                try {
+                                    const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(term)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWSAPI_KEY}`;
+                                    const response = await fetch(newsUrl);
 
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data.articles && data.articles.length > 0) {
-                                    news.value = data.articles.map(article => ({
-                                        headline: article.title,
-                                        summary: article.description || '',
-                                        source: article.source?.name || 'Unknown',
-                                        url: article.url,
-                                        image: article.urlToImage,
-                                        datetime: new Date(article.publishedAt).getTime() / 1000
-                                    }));
-                                    newsLoading.value = false;
-                                    return;
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        if (data.articles && data.articles.length > 0) {
+                                            // Tag articles with the search term for deduplication
+                                            const articles = data.articles.slice(0, 3).map(article => ({
+                                                headline: article.title,
+                                                summary: article.description || '',
+                                                source: article.source?.name || 'Unknown',
+                                                url: article.url,
+                                                image: article.urlToImage,
+                                                datetime: new Date(article.publishedAt).getTime() / 1000,
+                                                searchTerm: term.split(' ')[0] // First word (company name)
+                                            }));
+                                            allArticles.push(...articles);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn(`News fetch failed for ${term}:`, e);
                                 }
+                            }
+
+                            // Remove duplicates by URL
+                            const seenUrls = new Set();
+                            allArticles = allArticles.filter(article => {
+                                if (seenUrls.has(article.url)) return false;
+                                seenUrls.add(article.url);
+                                return true;
+                            });
+
+                            // Sort by date (newest first)
+                            allArticles.sort((a, b) => b.datetime - a.datetime);
+
+                            if (allArticles.length > 0) {
+                                news.value = allArticles.slice(0, 15);
+                                newsLoading.value = false;
+                                return;
                             }
 
                             // Fallback: Try RSS via a CORS proxy (rss2json)
