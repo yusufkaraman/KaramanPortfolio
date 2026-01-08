@@ -2541,22 +2541,30 @@
 
                             for (const term of searchTerms.slice(0, 4)) {
                                 try {
-                                    const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(term)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWSAPI_KEY}`;
+                                    // Use Google News RSS via rss2json (no CORS issues)
+                                    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(term)}&hl=en-US&gl=US&ceid=US:en`;
+                                    const newsUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
                                     const response = await fetch(newsUrl);
 
                                     if (response.ok) {
                                         const data = await response.json();
-                                        if (data.articles && data.articles.length > 0) {
-                                            // Tag articles with the search term for deduplication
-                                            const articles = data.articles.slice(0, 3).map(article => ({
-                                                headline: article.title,
-                                                summary: article.description || '',
-                                                source: article.source?.name || 'Unknown',
-                                                url: article.url,
-                                                image: article.urlToImage,
-                                                datetime: new Date(article.publishedAt).getTime() / 1000,
-                                                searchTerm: term.split(' ')[0] // First word (company name)
-                                            }));
+                                        if (data.items && data.items.length > 0) {
+                                            // Parse RSS items
+                                            const articles = data.items.slice(0, 3).map(item => {
+                                                // Extract source from title (format: "Title - Source")
+                                                const titleParts = item.title.split(' - ');
+                                                const source = titleParts.length > 1 ? titleParts.pop() : 'Google News';
+                                                const headline = titleParts.join(' - ');
+                                                return {
+                                                    headline: headline,
+                                                    summary: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+                                                    source: source,
+                                                    url: item.link,
+                                                    image: null,
+                                                    datetime: new Date(item.pubDate).getTime() / 1000,
+                                                    searchTerm: term.split(' ')[0]
+                                                };
+                                            });
                                             allArticles.push(...articles);
                                         }
                                     }
