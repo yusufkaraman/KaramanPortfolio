@@ -383,51 +383,29 @@
                         </div>
                         <span class="text-dark-300 text-lg font-medium">Toplam Portföy Değeri</span>
                     </div>
-                    <div class="text-4xl font-bold text-white text-center">
+                    <div class="text-4xl font-bold text-white text-center mb-4">
                         {{ formatCurrencyDisplay(totalCurrentValue) }}
                     </div>
-                </div>
-            </div>
-
-            <!-- Performance vs Market Comparison -->
-            <div v-if="portfolioPerformance || marketPerformance" class="flex justify-center mb-6">
-                <div class="glass-card rounded-xl p-4 max-w-sm w-full">
-                    <h3 class="text-dark-400 text-xs font-medium mb-3 text-center uppercase tracking-wide">📊 Piyasa
-                        Karşılaştırması</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <!-- Portfolio Performance -->
-                        <div class="text-center p-2 bg-dark-800 rounded-lg">
-                            <div class="text-dark-500 text-[10px] mb-1">Portföyüm</div>
-                            <div v-if="portfolioPerformance !== null" class="text-lg font-bold"
-                                :class="portfolioPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'">
-                                {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(2) }}%
-                            </div>
-                            <div v-else class="text-dark-500 text-xs">-</div>
+                    <!-- Inline Performance Comparison -->
+                    <div v-if="portfolioPerformance !== null || marketPerformance !== null"
+                        class="flex justify-center items-center gap-4 text-sm border-t border-dark-600 pt-4">
+                        <div v-if="portfolioPerformance !== null" class="flex items-center gap-1">
+                            <span class="text-dark-400">Portföy:</span>
+                            <span :class="portfolioPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                                class="font-semibold">
+                                {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(1) }}%
+                            </span>
                         </div>
-                        <!-- S&P 500 Performance -->
-                        <div class="text-center p-2 bg-dark-800 rounded-lg">
-                            <div class="text-dark-500 text-[10px] mb-1">S&P 500</div>
-                            <div v-if="marketPerformance !== null" class="text-lg font-bold"
-                                :class="marketPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'">
-                                {{ marketPerformance >= 0 ? '+' : '' }}{{ marketPerformance.toFixed(2) }}%
-                            </div>
-                            <div v-else class="text-dark-500 text-xs">-</div>
+                        <div v-if="marketPerformance !== null" class="flex items-center gap-1">
+                            <span class="text-dark-400">S&P:</span>
+                            <span :class="marketPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                                class="font-semibold">
+                                {{ marketPerformance >= 0 ? '+' : '' }}{{ marketPerformance.toFixed(1) }}%
+                            </span>
                         </div>
-                    </div>
-                    <!-- Outperformance Indicator -->
-                    <div v-if="portfolioPerformance !== null && marketPerformance !== null" class="mt-2 text-center">
-                        <div v-if="portfolioPerformance > marketPerformance"
-                            class="inline-flex items-center px-2 py-1 bg-emerald-500/20 rounded-full">
-                            <span class="text-emerald-400 text-xs">🏆 +{{ (portfolioPerformance -
-                                marketPerformance).toFixed(1) }}%</span>
-                        </div>
-                        <div v-else-if="portfolioPerformance < marketPerformance"
-                            class="inline-flex items-center px-2 py-1 bg-orange-500/20 rounded-full">
-                            <span class="text-orange-400 text-xs">📉 -{{ (marketPerformance -
-                                portfolioPerformance).toFixed(1) }}%</span>
-                        </div>
-                        <div v-else class="inline-flex items-center px-2 py-1 bg-blue-500/20 rounded-full">
-                            <span class="text-blue-400 text-xs">⚖️ Eşit</span>
+                        <div v-if="portfolioPerformance !== null && marketPerformance !== null">
+                            <span v-if="portfolioPerformance > marketPerformance" class="text-emerald-400">🏆</span>
+                            <span v-else-if="portfolioPerformance < marketPerformance" class="text-orange-400">📉</span>
                         </div>
                     </div>
                 </div>
