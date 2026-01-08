@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Kişisel Finans Takipçisi</title>
 
     <!-- PWA Meta Tags -->
@@ -1208,6 +1211,18 @@
                             <input type="range" min="0" max="30" step="5" v-model="logoZoom" @input="updateLogoZoom"
                                 class="w-full h-2 bg-dark-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
                         </div>
+
+                        <!-- Language Toggle -->
+                        <div class="flex items-center justify-between py-2 border-t border-dark-600 mt-2 pt-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🌐</span>
+                                <span class="text-dark-300 text-sm">{{ language === 'TR' ? 'Dil' : 'Language' }}</span>
+                            </div>
+                            <button @click="toggleLanguage"
+                                class="px-3 py-1 rounded-lg bg-dark-700 text-white text-sm font-medium hover:bg-dark-600 transition-colors">
+                                {{ language === 'TR' ? 'EN' : 'TR' }}
+                            </button>
+                        </div>
                     </div>
                 </transition>
             </div>
@@ -1290,6 +1305,7 @@
                     const logosEnabled = ref(true);
                     const logoZoom = ref(10);
                     const showSettingsMenu = ref(false);
+                    const language = ref('TR'); // 'TR' or 'EN'
 
                     // Load settings from localStorage
                     const loadSettings = () => {
@@ -1303,6 +1319,8 @@
                         if (savedHeatmap !== null) heatmapEnabled.value = savedHeatmap === 'true';
                         if (savedLogos !== null) logosEnabled.value = savedLogos === 'true';
                         if (savedLogoZoom !== null) logoZoom.value = parseInt(savedLogoZoom);
+                        const savedLanguage = localStorage.getItem('finance_tracker_language');
+                        if (savedLanguage !== null) language.value = savedLanguage;
                         applySettings();
                         applyLogoZoom();
                     };
@@ -1342,6 +1360,11 @@
                     const toggleHeatmap = () => {
                         heatmapEnabled.value = !heatmapEnabled.value;
                         localStorage.setItem('finance_tracker_heatmap', heatmapEnabled.value ? 'true' : 'false');
+                    };
+
+                    const toggleLanguage = () => {
+                        language.value = language.value === 'TR' ? 'EN' : 'TR';
+                        localStorage.setItem('finance_tracker_language', language.value);
                     };
 
                     const toggleLogos = () => {
@@ -2786,18 +2809,24 @@
                         return ((totalValue - totalCost) / totalCost) * 100;
                     });
 
-                    // Fetch S&P 500 daily performance using Finnhub
+                    // Fetch S&P 500 YTD performance (from Jan 1, 2026)
                     const fetchMarketPerformance = async () => {
                         try {
-                            // Using Finnhub for SPY (S&P 500 ETF) quote
+                            // SPY price at Jan 1, 2026 (market open)
+                            // This is a baseline for YTD calculation
+                            const SPY_JAN_2026_PRICE = 599.50; // Update this as needed
+
+                            // Using Finnhub for SPY (S&P 500 ETF) current quote
                             const finnhubKey = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
                             const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${finnhubKey}`);
 
                             if (response.ok) {
                                 const data = await response.json();
-                                if (data.dp !== undefined && data.dp !== null) {
-                                    // dp is daily change percent
-                                    marketPerformance.value = data.dp;
+                                if (data.c && data.c > 0) {
+                                    // c is current price - calculate YTD change
+                                    const currentPrice = data.c;
+                                    const ytdChange = ((currentPrice - SPY_JAN_2026_PRICE) / SPY_JAN_2026_PRICE) * 100;
+                                    marketPerformance.value = ytdChange;
                                     return;
                                 }
                             }
@@ -2894,7 +2923,10 @@
                         getProfitLoss,
                         // Performance vs Market
                         portfolioPerformance,
-                        marketPerformance
+                        marketPerformance,
+                        // Language
+                        language,
+                        toggleLanguage
                     };
                 }
             }).mount('#app');
