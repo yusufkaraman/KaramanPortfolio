@@ -2491,42 +2491,116 @@
                         });
                     });
 
-                    // Fetch news for owned stocks
+                    // Fetch news for owned assets using NewsAPI.org
                     const fetchNews = async () => {
                         newsLoading.value = true;
                         news.value = [];
 
-                        const FINNHUB_API_KEY = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
-                        const stockAssets = assets.value.filter(a => a.type === 'stock');
+                        const NEWSAPI_KEY = '9e9005cf40fc44dba78c93cb4e46b829';
 
-                        if (stockAssets.length === 0) {
-                            // Get general market news
-                            try {
-                                const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_API_KEY}`);
-                                trackApiCall('finnhub');
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    news.value = data.slice(0, 10);
-                                }
-                            } catch (e) {
-                                console.warn('News fetch failed:', e);
-                            }
-                        } else {
-                            // Get news for each stock
-                            for (const asset of stockAssets.slice(0, 3)) {
-                                try {
-                                    const response = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${asset.symbol}&from=${getDateDaysAgo(7)}&to=${getDateToday()}&token=${FINNHUB_API_KEY}`);
-                                    trackApiCall('finnhub');
-                                    if (response.ok) {
-                                        const data = await response.json();
-                                        news.value.push(...data.slice(0, 3));
-                                    }
-                                } catch (e) {
-                                    console.warn('News fetch failed for', asset.symbol, e);
-                                }
-                            }
+                        // Build search query from portfolio assets
+                        const stockAssets = assets.value.filter(a => a.type === 'stock');
+                        const cryptoAssets = assets.value.filter(a => a.type === 'crypto');
+
+                        // Company name mappings for better search
+                        const stockNames = {
+                            'AAPL': 'Apple', 'MSFT': 'Microsoft', 'GOOGL': 'Google', 'AMZN': 'Amazon',
+                            'META': 'Meta Facebook', 'TSLA': 'Tesla', 'NVDA': 'Nvidia', 'AMD': 'AMD',
+                            'NFLX': 'Netflix', 'TSM': 'TSMC', 'INTC': 'Intel', 'DIS': 'Disney',
+                            'BA': 'Boeing', 'JPM': 'JPMorgan', 'V': 'Visa', 'MA': 'Mastercard',
+                            'KO': 'Coca-Cola', 'PEP': 'Pepsi', 'NKE': 'Nike', 'SBUX': 'Starbucks'
+                        };
+
+                        const cryptoNames = {
+                            'BTC': 'Bitcoin', 'ETH': 'Ethereum', 'SOL': 'Solana', 'DOGE': 'Dogecoin',
+                            'XRP': 'Ripple XRP', 'ADA': 'Cardano', 'DOT': 'Polkadot', 'AVAX': 'Avalanche',
+                            'MATIC': 'Polygon', 'LINK': 'Chainlink', 'LTC': 'Litecoin', 'BNB': 'Binance'
+                        };
+
+                        // Build search terms
+                        let searchTerms = [];
+
+                        stockAssets.slice(0, 5).forEach(a => {
+                            const name = stockNames[a.symbol] || a.symbol;
+                            searchTerms.push(name);
+                        });
+
+                        cryptoAssets.slice(0, 3).forEach(a => {
+                            const name = cryptoNames[a.symbol] || a.symbol;
+                            searchTerms.push(name);
+                        });
+
+                        // Default to general finance news if no assets
+                        if (searchTerms.length === 0) {
+                            searchTerms = ['stock market', 'cryptocurrency', 'finance'];
                         }
+
+                        try {
+                            // NewsAPI.org request
+                            const query = searchTerms.slice(0, 5).join(' OR ');
+                            const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=15&apiKey=${NEWSAPI_KEY}`;
+
+                            const response = await fetch(newsUrl);
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.articles && data.articles.length > 0) {
+                                    news.value = data.articles.map(article => ({
+                                        headline: article.title,
+                                        summary: article.description || '',
+                                        source: article.source?.name || 'Unknown',
+                                        url: article.url,
+                                        image: article.urlToImage,
+                                        datetime: new Date(article.publishedAt).getTime() / 1000
+                                    }));
+                                    newsLoading.value = false;
+                                    return;
+                                }
+                            }
+
+                            // Fallback: Try RSS via a CORS proxy (rss2json)
+                            console.log('NewsAPI failed, trying RSS fallback...');
+                            await fetchNewsFromRSS(searchTerms[0] || 'finance');
+
+                        } catch (e) {
+                            console.warn('NewsAPI fetch failed:', e);
+                            // Try RSS fallback
+                            await fetchNewsFromRSS(searchTerms[0] || 'finance');
+                        }
+
                         newsLoading.value = false;
+                    };
+
+                    // RSS fallback using Google News via rss2json
+                    const fetchNewsFromRSS = async (searchTerm) => {
+                        try {
+                            const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchTerm + ' stock')}&hl=en-US&gl=US&ceid=US:en`;
+                            const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+                            const response = await fetch(proxyUrl);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.items && data.items.length > 0) {
+                                    news.value = data.items.slice(0, 10).map(item => ({
+                                        headline: item.title,
+                                        summary: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+                                        source: 'Google News',
+                                        url: item.link,
+                                        image: null,
+                                        datetime: new Date(item.pubDate).getTime() / 1000
+                                    }));
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('RSS fallback failed:', e);
+                            news.value = [{
+                                headline: 'Haberler yüklenemedi',
+                                summary: 'Lütfen internet bağlantınızı kontrol edin.',
+                                source: 'Sistem',
+                                url: '#',
+                                datetime: Date.now() / 1000
+                            }];
+                        }
                     };
 
                     // Date helpers
