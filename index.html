@@ -389,6 +389,55 @@
                 </div>
             </div>
 
+            <!-- Performance vs Market Comparison -->
+            <div v-if="portfolioPerformance || marketPerformance" class="flex justify-center mb-8">
+                <div class="glass-card rounded-2xl p-6 max-w-2xl w-full">
+                    <h3 class="text-dark-300 text-sm font-medium mb-4 text-center uppercase tracking-wide">📊 Performans
+                        Karşılaştırması</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Portfolio Performance -->
+                        <div class="text-center p-4 bg-dark-800 rounded-xl">
+                            <div class="text-dark-400 text-xs mb-2">Portföyüm</div>
+                            <div v-if="portfolioPerformance !== null" class="text-2xl font-bold"
+                                :class="portfolioPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'">
+                                {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(2) }}%
+                            </div>
+                            <div v-else class="text-dark-500 text-sm">Maliyet yok</div>
+                        </div>
+                        <!-- S&P 500 Performance -->
+                        <div class="text-center p-4 bg-dark-800 rounded-xl">
+                            <div class="text-dark-400 text-xs mb-2">S&P 500 (YTD)</div>
+                            <div v-if="marketPerformance !== null" class="text-2xl font-bold"
+                                :class="marketPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'">
+                                {{ marketPerformance >= 0 ? '+' : '' }}{{ marketPerformance.toFixed(2) }}%
+                            </div>
+                            <div v-else class="text-dark-500 text-sm">Yükleniyor...</div>
+                        </div>
+                    </div>
+                    <!-- Outperformance Indicator -->
+                    <div v-if="portfolioPerformance !== null && marketPerformance !== null" class="mt-4 text-center">
+                        <div v-if="portfolioPerformance > marketPerformance"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-full">
+                            <span class="text-emerald-400 text-sm font-medium">
+                                🏆 Piyasayı {{ (portfolioPerformance - marketPerformance).toFixed(2) }}% geride
+                                bıraktınız!
+                            </span>
+                        </div>
+                        <div v-else-if="portfolioPerformance < marketPerformance"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/20 rounded-full">
+                            <span class="text-orange-400 text-sm font-medium">
+                                📉 Piyasanın {{ (marketPerformance - portfolioPerformance).toFixed(2) }}% gerisinde
+                            </span>
+                        </div>
+                        <div v-else class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 rounded-full">
+                            <span class="text-blue-400 text-sm font-medium">
+                                ⚖️ Piyasa ile aynı performans
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-4 mb-8">
                 <button @click="showAddModal = true"
@@ -1223,6 +1272,9 @@
                     // Chart state
                     const showChartModal = ref(false);
                     const chartTab = ref('pie'); // 'pie', 'performance', 'history'
+
+                    // Market performance state
+                    const marketPerformance = ref(null);
 
                     // Currency state
                     const selectedCurrency = ref('TRY');
@@ -2737,10 +2789,66 @@
                         loadApiUsage();
                         loadSettings();
                         loadPreviousPrices();
+                        fetchMarketPerformance(); // Fetch S&P 500 data
                         if (assets.value.length > 0) {
                             fetchAllPrices();
                         }
                     });
+
+                    // Portfolio Performance - calculated from cost basis
+                    const portfolioPerformance = computed(() => {
+                        let totalCost = 0;
+                        let totalValue = 0;
+                        let hasAnyCost = false;
+
+                        assets.value.forEach(asset => {
+                            if (asset.costPerUnit && asset.currentPrice) {
+                                hasAnyCost = true;
+                                totalCost += asset.quantity * asset.costPerUnit;
+                                totalValue += asset.quantity * asset.currentPrice;
+                            }
+                        });
+
+                        if (!hasAnyCost || totalCost === 0) return null;
+                        return ((totalValue - totalCost) / totalCost) * 100;
+                    });
+
+                    // Fetch S&P 500 YTD performance
+                    const fetchMarketPerformance = async () => {
+                        try {
+                            // Using Yahoo Finance data via a public API
+                            // SPY ETF as S&P 500 proxy
+                            const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=ytd');
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                const chart = data.chart?.result?.[0];
+                                if (chart && chart.meta) {
+                                    const currentPrice = chart.meta.regularMarketPrice;
+                                    const previousClose = chart.meta.chartPreviousClose;
+                                    // Calculate YTD performance
+                                    const ytdPerformance = ((currentPrice - previousClose) / previousClose) * 100;
+                                    marketPerformance.value = ytdPerformance;
+                                    return;
+                                }
+                            }
+
+                            // Fallback: Try Finnhub for SPY quote
+                            const finnhubKey = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
+                            const quoteResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=SPY&token=${finnhubKey}`);
+                            if (quoteResponse.ok) {
+                                const quoteData = await quoteResponse.json();
+                                if (quoteData.dp) {
+                                    // dp is change percent
+                                    marketPerformance.value = quoteData.dp;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Market performance fetch failed:', e);
+                            // Set a default value for display
+                            marketPerformance.value = null;
+                        }
+                    };
 
                     return {
                         assets,
@@ -2823,7 +2931,10 @@
                         // Cost & Profit/Loss
                         editCostPerUnit,
                         getTotalCost,
-                        getProfitLoss
+                        getProfitLoss,
+                        // Performance vs Market
+                        portfolioPerformance,
+                        marketPerformance
                     };
                 }
             }).mount('#app');
