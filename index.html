@@ -2394,10 +2394,63 @@
                                         logDebug('error', `❌ [GOLD] metals.dev error: ${metalsResponse.status} - ${errorText}`);
                                     }
                                 } catch (e) {
-                                    logDebug('warn', 'metals.dev API failed:', e);
+                                    logDebug('warn', 'metals.dev API failed:', e.message);
                                 }
 
-                                logDebug('warn', 'Gold API failed');
+                                // Fallback: Yahoo Finance for gold (GC=F) + USD/TRY conversion
+                                try {
+                                    logDebug('info', `📡 [GOLD] Trying Yahoo Finance fallback for ${symbol}...`);
+
+                                    // Get gold price in USD from Yahoo Finance (GC=F = Gold Futures)
+                                    const goldUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d')}`;
+                                    const goldResponse = await fetch(goldUrl);
+
+                                    if (goldResponse.ok) {
+                                        const goldWrapper = await goldResponse.json();
+                                        const goldData = JSON.parse(goldWrapper.contents);
+
+                                        if (goldData.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                            const goldUSD = goldData.chart.result[0].meta.regularMarketPrice; // USD per troy ounce
+                                            logDebug('info', `📊 [GOLD] Gold price: $${goldUSD.toFixed(2)}/oz (Yahoo Finance)`);
+
+                                            // Get USD/TRY rate
+                                            const tryUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d')}`;
+                                            const tryResponse = await fetch(tryUrl);
+
+                                            if (tryResponse.ok) {
+                                                const tryWrapper = await tryResponse.json();
+                                                const tryData = JSON.parse(tryWrapper.contents);
+
+                                                if (tryData.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                                    const usdTry = tryData.chart.result[0].meta.regularMarketPrice;
+                                                    logDebug('info', `📊 [GOLD] USD/TRY rate: ₺${usdTry.toFixed(4)}`);
+
+                                                    // Convert: USD/oz -> TRY/oz -> TRY/gram (1 troy oz = 31.1035g)
+                                                    const goldTryPerOz = goldUSD * usdTry;
+                                                    const goldTryPerGram = goldTryPerOz / 31.1035;
+
+                                                    if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
+                                                        asset.currentPrice = goldTryPerGram;
+                                                        logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Yahoo Finance fallback)`);
+                                                        return true;
+                                                    } else if (symbol === 'XAU' || symbol === 'OUNCE') {
+                                                        asset.currentPrice = goldTryPerOz;
+                                                        logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Ounce via Yahoo Finance)`);
+                                                        return true;
+                                                    } else {
+                                                        asset.currentPrice = goldTryPerGram;
+                                                        logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (default gram via Yahoo Finance)`);
+                                                        return true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (e2) {
+                                    logDebug('error', `❌ [GOLD] Yahoo Finance fallback failed:`, e2.message);
+                                }
+
+                                logDebug('warn', 'All Gold APIs failed');
                                 return false;
 
                             } else if (asset.type === 'stock') {
