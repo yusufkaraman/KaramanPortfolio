@@ -223,6 +223,7 @@
 
         input[type="number"] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .scrollbar-thin::-webkit-scrollbar {
@@ -246,6 +247,7 @@
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -1228,11 +1230,72 @@
             </div>
         </div>
 
+        <!-- Debug Console -->
+        <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none">
+            <div v-if="showDebugConsole"
+                class="bg-black/90 text-green-400 p-4 rounded-lg shadow-2xl w-[90vw] max-w-2xl h-96 overflow-y-auto font-mono text-xs pointer-events-auto mb-2 border border-green-500/30 backdrop-blur-md">
+                <div
+                    class="flex justify-between items-center mb-2 border-b border-green-500/30 pb-2 sticky top-0 bg-black/90 p-2 -mx-2 -mt-2">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold">Debug Console</h3>
+                        <button @click="debugLogs = []"
+                            class="text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 px-2 py-0.5 rounded">Clear</button>
+                    </div>
+                    <button @click="showDebugConsole = false" class="text-white hover:text-red-400 px-2">✕</button>
+                </div>
+                <div v-if="debugLogs.length === 0" class="text-gray-600 italic text-center py-4">No logs yet...</div>
+                <div v-for="(log, index) in debugLogs" :key="index"
+                    class="mb-1 border-b border-green-900/30 pb-1 break-words">
+                    <span class="text-gray-500">[{{ log.time }}]</span>
+                    <span
+                        :class="{'text-red-400': log.type === 'error', 'text-yellow-400': log.type === 'warn', 'text-blue-400': log.type === 'info', 'text-green-400': log.type === 'success'}"
+                        class="font-bold ml-1">[{{ log.type.toUpperCase() }}]</span>
+                    <span class="ml-1 whitespace-pre-wrap">{{ log.message }}</span>
+                </div>
+            </div>
+            <button @click="showDebugConsole = !showDebugConsole"
+                class="pointer-events-auto bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded-full shadow-lg border border-dark-600 flex items-center gap-2 transition-all opacity-80 hover:opacity-100">
+                🐞 Debug
+                <span v-if="debugLogs.length > 0"
+                    class="bg-red-500 text-white text-[10px] min-w-[18px] h-[18px] flex items-center justify-center rounded-full leading-none">{{
+                    debugLogs.length > 99 ? '99+' : debugLogs.length }}</span>
+            </button>
+        </div>
+
         <script>
             const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
 
             createApp({
                 setup() {
+                    // Debug Console State
+                    const showDebugConsole = ref(false);
+                    const debugLogs = ref([]);
+
+                    const logDebug = (type, message, data = null) => {
+                        const time = new Date().toLocaleTimeString();
+                        let formattedMessage = message;
+                        if (data) {
+                            try {
+                                if (typeof data === 'object') {
+                                    formattedMessage += ' ' + JSON.stringify(data, null, 2);
+                                } else {
+                                    formattedMessage += ' ' + String(data);
+                                }
+                            } catch (e) {
+                                formattedMessage += ' [Circular/Unserializable]';
+                            }
+                        }
+
+                        // Add to UI log (limit to 100 entries)
+                        debugLogs.value.unshift({ type, message: formattedMessage, time });
+                        if (debugLogs.value.length > 200) debugLogs.value.pop();
+
+                        // Also log to browser console
+                        if (type === 'error') console.error(message, data || '');
+                        else if (type === 'warn') console.warn(message, data || '');
+                        else console.log(message, data || '');
+                    };
+
                     // State
                     const assets = ref([]);
                     const showAddModal = ref(false);
@@ -2234,32 +2297,32 @@
 
                     // Fetch prices
                     const fetchPriceForAsset = async (asset) => {
-                        console.log(`\n🔄 [${asset.type.toUpperCase()}] Fetching price for ${asset.symbol}...`);
+                        logDebug('info', `\n🔄 [${asset.type.toUpperCase()}] Fetching price for ${asset.symbol}...`);
                         try {
                             if (asset.type === 'currency') {
                                 // Use exchangerate-api for currency (free, CORS-enabled)
                                 const apiUrl = `https://api.exchangerate-api.com/v4/latest/${asset.symbol}`;
-                                console.log(`📡 [CURRENCY] Request: ${apiUrl}`);
+                                logDebug('info', `📡 [CURRENCY] Request: ${apiUrl}`);
 
                                 const response = await fetch(apiUrl);
                                 trackApiCall('exchange');
 
-                                console.log(`📥 [CURRENCY] Response status: ${response.status} ${response.statusText}`);
+                                logDebug('info', `📥 [CURRENCY] Response status: ${response.status} ${response.statusText}`);
 
                                 if (response.ok) {
                                     const data = await response.json();
-                                    console.log(`📊 [CURRENCY] Response data:`, data);
+                                    logDebug('info', `📊 [CURRENCY] Response data:`, data);
 
                                     if (data.rates && data.rates.TRY) {
                                         asset.currentPrice = data.rates.TRY;
-                                        console.log(`✅ [CURRENCY] ${asset.symbol}: ₺${asset.currentPrice.toFixed(4)}`);
+                                        logDebug('success', `✅ [CURRENCY] ${asset.symbol}: ₺${asset.currentPrice.toFixed(4)}`);
                                         return true;
                                     } else {
-                                        console.error(`❌ [CURRENCY] TRY rate not found in response. Available rates:`, Object.keys(data.rates || {}));
+                                        logDebug('error', `❌ [CURRENCY] TRY rate not found in response. Available rates:`, Object.keys(data.rates || {}));
                                     }
                                 } else {
                                     const errorText = await response.text();
-                                    console.error(`❌ [CURRENCY] API error: ${response.status} - ${errorText}`);
+                                    logDebug('error', `❌ [CURRENCY] API error: ${response.status} - ${errorText}`);
                                 }
                                 return false;
                             } else if (asset.type === 'gold') {
@@ -2269,7 +2332,7 @@
                                 // Use metals.dev API - supports TRY directly!
                                 try {
                                     const metalsUrl = `https://api.metals.dev/v1/latest?api_key=${METALS_DEV_API_KEY}&currency=TRY&unit=g`;
-                                    console.log(`📡 [GOLD] Request: ${metalsUrl.replace(METALS_DEV_API_KEY, 'API_KEY_HIDDEN')}`);
+                                    logDebug('info', `📡 [GOLD] Request: ${metalsUrl.replace(METALS_DEV_API_KEY, 'API_KEY_HIDDEN')}`);
 
                                     const metalsResponse = await fetch(metalsUrl, {
                                         headers: {
@@ -2278,53 +2341,53 @@
                                     });
                                     trackApiCall('metals');
 
-                                    console.log(`📥 [GOLD] Response status: ${metalsResponse.status} ${metalsResponse.statusText}`);
+                                    logDebug('info', `📥 [GOLD] Response status: ${metalsResponse.status} ${metalsResponse.statusText}`);
 
                                     if (metalsResponse.ok) {
                                         const metalsData = await metalsResponse.json();
-                                        console.log(`📊 [GOLD] Response data:`, metalsData);
+                                        logDebug('info', `📊 [GOLD] Response data:`, metalsData);
 
                                         // metals.dev returns prices per gram when unit=g
                                         if (metalsData.metals && metalsData.metals.gold) {
                                             const goldPricePerGram = metalsData.metals.gold;
-                                            console.log(`📊 [GOLD] Gold price per gram: ₺${goldPricePerGram}`);
+                                            logDebug('info', `📊 [GOLD] Gold price per gram: ₺${goldPricePerGram}`);
 
                                             if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
                                                 asset.currentPrice = goldPricePerGram;
-                                                console.log(`✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Gram via metals.dev)`);
+                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Gram via metals.dev)`);
                                                 return true;
                                             } else if (symbol === 'XAU' || symbol === 'OUNCE') {
                                                 // Convert gram to troy ounce (1 troy oz = 31.1035 g)
                                                 asset.currentPrice = goldPricePerGram * 31.1035;
-                                                console.log(`✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Ounce via metals.dev)`);
+                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Ounce via metals.dev)`);
                                                 return true;
                                             } else if (symbol === 'XAG' || symbol === 'SILVER') {
                                                 // Silver price
                                                 if (metalsData.metals.silver) {
                                                     asset.currentPrice = metalsData.metals.silver;
-                                                    console.log(`✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Silver via metals.dev)`);
+                                                    logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Silver via metals.dev)`);
                                                     return true;
                                                 } else {
-                                                    console.error(`❌ [GOLD] Silver price not found in metals data`);
+                                                    logDebug('error', `❌ [GOLD] Silver price not found in metals data`);
                                                 }
                                             } else {
                                                 // Default to gold gram price
                                                 asset.currentPrice = goldPricePerGram;
-                                                console.log(`✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (defaulting to Gold Gram)`);
+                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (defaulting to Gold Gram)`);
                                                 return true;
                                             }
                                         } else {
-                                            console.error(`❌ [GOLD] No gold price in response. Available metals:`, Object.keys(metalsData.metals || {}));
+                                            logDebug('error', `❌ [GOLD] No gold price in response. Available metals:`, Object.keys(metalsData.metals || {}));
                                         }
                                     } else {
                                         const errorText = await metalsResponse.text();
-                                        console.error(`❌ [GOLD] metals.dev error: ${metalsResponse.status} - ${errorText}`);
+                                        logDebug('error', `❌ [GOLD] metals.dev error: ${metalsResponse.status} - ${errorText}`);
                                     }
                                 } catch (e) {
-                                    console.warn('metals.dev API failed:', e);
+                                    logDebug('warn', 'metals.dev API failed:', e);
                                 }
 
-                                console.warn('Gold API failed');
+                                logDebug('warn', 'Gold API failed');
                                 return false;
 
                             } else if (asset.type === 'stock') {
@@ -2336,50 +2399,50 @@
                                 // Use Finnhub API directly (CORS enabled)
                                 try {
                                     const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
-                                    console.log(`📡 [STOCK] Finnhub request: ${finnhubUrl.replace(FINNHUB_API_KEY, 'API_KEY_HIDDEN')}`);
+                                    logDebug('info', `📡 [STOCK] Finnhub request: ${finnhubUrl.replace(FINNHUB_API_KEY, 'API_KEY_HIDDEN')}`);
 
                                     const finnhubResponse = await fetch(finnhubUrl);
                                     trackApiCall('finnhub');
 
-                                    console.log(`📥 [STOCK] Finnhub response status: ${finnhubResponse.status} ${finnhubResponse.statusText}`);
+                                    logDebug('info', `📥 [STOCK] Finnhub response status: ${finnhubResponse.status} ${finnhubResponse.statusText}`);
 
                                     if (finnhubResponse.ok) {
                                         const finnhubData = await finnhubResponse.json();
-                                        console.log(`📊 [STOCK] Finnhub data for ${symbol}:`, finnhubData);
+                                        logDebug('info', `📊 [STOCK] Finnhub data for ${symbol}:`, finnhubData);
 
                                         if (finnhubData.c && finnhubData.c > 0) { // 'c' is current price
-                                            console.log(`💵 [STOCK] ${symbol} USD price: $${finnhubData.c}`);
+                                            logDebug('info', `💵 [STOCK] ${symbol} USD price: $${finnhubData.c}`);
 
                                             // Convert USD to TRY
-                                            console.log(`📡 [STOCK] Fetching USD/TRY exchange rate...`);
+                                            logDebug('info', `📡 [STOCK] Fetching USD/TRY exchange rate...`);
                                             const usdTryResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                                            console.log(`📥 [STOCK] Exchange rate response: ${usdTryResponse.status}`);
+                                            logDebug('info', `📥 [STOCK] Exchange rate response: ${usdTryResponse.status}`);
 
                                             if (usdTryResponse.ok) {
                                                 const usdTryData = await usdTryResponse.json();
                                                 const usdToTry = usdTryData.rates.TRY;
-                                                console.log(`💱 [STOCK] USD/TRY rate: ${usdToTry}`);
+                                                logDebug('info', `💱 [STOCK] USD/TRY rate: ${usdToTry}`);
                                                 asset.currentPrice = finnhubData.c * usdToTry;
-                                                console.log(`✅ [STOCK] ${symbol}: $${finnhubData.c} × ${usdToTry} = ₺${asset.currentPrice.toFixed(2)}`);
+                                                logDebug('success', `✅ [STOCK] ${symbol}: $${finnhubData.c} × ${usdToTry} = ₺${asset.currentPrice.toFixed(2)}`);
                                                 return true;
                                             } else {
-                                                console.error(`❌ [STOCK] USD/TRY exchange rate failed: ${usdTryResponse.status}`);
+                                                logDebug('error', `❌ [STOCK] USD/TRY exchange rate failed: ${usdTryResponse.status}`);
                                             }
                                         } else {
-                                            console.error(`❌ [STOCK] Finnhub returned no price for ${symbol}. Data:`, finnhubData);
+                                            logDebug('error', `❌ [STOCK] Finnhub returned no price for ${symbol}. Data:`, finnhubData);
                                             if (finnhubData.error) {
-                                                console.error(`❌ [STOCK] Finnhub error message: ${finnhubData.error}`);
+                                                logDebug('error', `❌ [STOCK] Finnhub error message: ${finnhubData.error}`);
                                             }
                                         }
                                     } else {
                                         const errorText = await finnhubResponse.text();
-                                        console.error(`❌ [STOCK] Finnhub API error: ${finnhubResponse.status} - ${errorText}`);
+                                        logDebug('error', `❌ [STOCK] Finnhub API error: ${finnhubResponse.status} - ${errorText}`);
                                     }
                                 } catch (e) {
-                                    console.error(`❌ [STOCK] Finnhub API exception:`, e.message, e);
+                                    logDebug('error', `❌ [STOCK] Finnhub API exception:`, e.message, e);
                                 }
 
-                                console.error(`❌ [STOCK] All stock APIs failed for ${symbol}`);
+                                logDebug('error', `❌ [STOCK] All stock APIs failed for ${symbol}`);
                                 return false;
                             } else if (asset.type === 'crypto') {
                                 const symbol = asset.symbol.toUpperCase();
@@ -2410,44 +2473,44 @@
                                 };
 
                                 const coinId = symbolToId[symbol] || symbol.toLowerCase();
-                                console.log(`🧾 [CRYPTO] Symbol: ${symbol} -> CoinGecko ID: ${coinId}`);
+                                logDebug('info', `🧾 [CRYPTO] Symbol: ${symbol} -> CoinGecko ID: ${coinId}`);
 
                                 try {
                                     // Use CoinGecko API - free and CORS-enabled!
                                     const coinGeckoUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=try,usd`;
-                                    console.log(`📡 [CRYPTO] CoinGecko request: ${coinGeckoUrl}`);
+                                    logDebug('info', `📡 [CRYPTO] CoinGecko request: ${coinGeckoUrl}`);
 
                                     const response = await fetch(coinGeckoUrl);
                                     trackApiCall('coinapi'); // reuse coinapi counter
 
-                                    console.log(`📥 [CRYPTO] CoinGecko response status: ${response.status} ${response.statusText}`);
+                                    logDebug('info', `📥 [CRYPTO] CoinGecko response status: ${response.status} ${response.statusText}`);
 
                                     if (response.ok) {
                                         const data = await response.json();
-                                        console.log(`📊 [CRYPTO] CoinGecko data:`, data);
+                                        logDebug('info', `📊 [CRYPTO] CoinGecko data:`, data);
 
                                         if (data[coinId] && data[coinId].try) {
                                             asset.currentPrice = data[coinId].try;
-                                            console.log(`✅ [CRYPTO] ${symbol}: $${data[coinId].usd} = ₺${asset.currentPrice.toFixed(2)}`);
+                                            logDebug('success', `✅ [CRYPTO] ${symbol}: $${data[coinId].usd} = ₺${asset.currentPrice.toFixed(2)}`);
                                             return true;
                                         } else {
-                                            console.error(`❌ [CRYPTO] CoinGecko: coin '${coinId}' not found in response. Available coins:`, Object.keys(data));
+                                            logDebug('error', `❌ [CRYPTO] CoinGecko: coin '${coinId}' not found in response. Available coins:`, Object.keys(data));
                                             if (Object.keys(data).length === 0) {
-                                                console.error(`❌ [CRYPTO] Empty response - coin ID '${coinId}' may be invalid`);
+                                                logDebug('error', `❌ [CRYPTO] Empty response - coin ID '${coinId}' may be invalid`);
                                             }
                                         }
                                     } else {
                                         const errorText = await response.text();
-                                        console.error(`❌ [CRYPTO] CoinGecko API error: ${response.status} - ${errorText}`);
+                                        logDebug('error', `❌ [CRYPTO] CoinGecko API error: ${response.status} - ${errorText}`);
                                         if (response.status === 429) {
-                                            console.error(`❌ [CRYPTO] Rate limited! Too many requests to CoinGecko`);
+                                            logDebug('error', `❌ [CRYPTO] Rate limited! Too many requests to CoinGecko`);
                                         }
                                     }
                                 } catch (e) {
-                                    console.error(`❌ [CRYPTO] CoinGecko exception:`, e.message, e);
+                                    logDebug('error', `❌ [CRYPTO] CoinGecko exception:`, e.message, e);
                                 }
 
-                                console.error(`❌ [CRYPTO] All crypto APIs failed for ${symbol}`);
+                                logDebug('error', `❌ [CRYPTO] All crypto APIs failed for ${symbol}`);
                                 return false;
                             } else if (asset.type === 'bist') {
                                 const symbol = asset.symbol.toUpperCase();
@@ -2459,46 +2522,46 @@
                                     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`;
                                     const fullUrl = corsProxy + encodeURIComponent(yahooUrl);
 
-                                    console.log(`📡 [BIST] Yahoo symbol: ${yahooSymbol}`);
-                                    console.log(`📡 [BIST] Request URL: ${fullUrl}`);
+                                    logDebug('info', `📡 [BIST] Yahoo symbol: ${yahooSymbol}`);
+                                    logDebug('info', `📡 [BIST] Request URL: ${fullUrl}`);
 
                                     const response = await fetch(fullUrl);
                                     trackApiCall('finnhub'); // reuse finnhub counter
 
-                                    console.log(`📥 [BIST] Response status: ${response.status} ${response.statusText}`);
+                                    logDebug('info', `📥 [BIST] Response status: ${response.status} ${response.statusText}`);
 
                                     if (response.ok) {
                                         const data = await response.json();
-                                        console.log(`📊 [BIST] Yahoo response:`, data);
+                                        logDebug('info', `📊 [BIST] Yahoo response:`, data);
 
                                         if (data.chart && data.chart.result && data.chart.result[0]) {
                                             const result = data.chart.result[0];
                                             const price = result.meta.regularMarketPrice;
-                                            console.log(`📊 [BIST] Meta data:`, result.meta);
+                                            logDebug('info', `📊 [BIST] Meta data:`, result.meta);
 
                                             if (price) {
                                                 asset.currentPrice = price;
-                                                console.log(`✅ [BIST] ${symbol}: ₺${price.toFixed(2)}`);
+                                                logDebug('success', `✅ [BIST] ${symbol}: ₺${price.toFixed(2)}`);
                                                 return true;
                                             } else {
-                                                console.error(`❌ [BIST] No regularMarketPrice in meta`);
+                                                logDebug('error', `❌ [BIST] No regularMarketPrice in meta`);
                                             }
                                         } else {
-                                            console.error(`❌ [BIST] Invalid chart data structure. chart.error:`, data.chart?.error);
+                                            logDebug('error', `❌ [BIST] Invalid chart data structure. chart.error:`, data.chart?.error);
                                         }
                                     } else {
                                         const errorText = await response.text();
-                                        console.error(`❌ [BIST] Yahoo API error: ${response.status} - ${errorText}`);
+                                        logDebug('error', `❌ [BIST] Yahoo API error: ${response.status} - ${errorText}`);
                                     }
                                 } catch (e) {
-                                    console.error(`❌ [BIST] Yahoo Finance exception:`, e.message, e);
+                                    logDebug('error', `❌ [BIST] Yahoo Finance exception:`, e.message, e);
                                 }
 
-                                console.error(`❌ [BIST] All BIST APIs failed for ${symbol}`);
+                                logDebug('error', `❌ [BIST] All BIST APIs failed for ${symbol}`);
                                 return false;
                             }
                         } catch (error) {
-                            console.error(`❌ [GENERAL] Price fetch failed for ${asset.symbol} (${asset.type}):`, error.message, error);
+                            logDebug('error', `❌ [GENERAL] Price fetch failed for ${asset.symbol} (${asset.type}):`, error.message, error);
                         }
                         return false;
                     };
@@ -2890,44 +2953,44 @@
 
                     // Fetch S&P 500 YTD performance (from Jan 1, 2026)
                     const fetchMarketPerformance = async () => {
-                        console.log(`\n📈 [S&P500] Fetching market performance...`);
+                        logDebug('info', `\n📈 [S&P500] Fetching market performance...`);
                         try {
                             // SPY price at Jan 1, 2026 (market open)
                             // This is a baseline for YTD calculation
                             const SPY_JAN_2026_PRICE = 599.50; // Update this as needed
-                            console.log(`📊 [S&P500] Jan 2026 baseline price: $${SPY_JAN_2026_PRICE}`);
+                            logDebug('info', `📊 [S&P500] Jan 2026 baseline price: $${SPY_JAN_2026_PRICE}`);
 
                             // Using Finnhub for SPY (S&P 500 ETF) current quote
                             const finnhubKey = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
                             const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=SPY&token=${finnhubKey}`;
-                            console.log(`📡 [S&P500] Finnhub request: ${finnhubUrl.replace(finnhubKey, 'API_KEY_HIDDEN')}`);
+                            logDebug('info', `📡 [S&P500] Finnhub request: ${finnhubUrl.replace(finnhubKey, 'API_KEY_HIDDEN')}`);
 
                             const response = await fetch(finnhubUrl);
-                            console.log(`📥 [S&P500] Response status: ${response.status} ${response.statusText}`);
+                            logDebug('info', `📥 [S&P500] Response status: ${response.status} ${response.statusText}`);
 
                             if (response.ok) {
                                 const data = await response.json();
-                                console.log(`📊 [S&P500] Finnhub SPY data:`, data);
+                                logDebug('info', `📊 [S&P500] Finnhub SPY data:`, data);
 
                                 if (data.c && data.c > 0) {
                                     // c is current price - calculate YTD change
                                     const currentPrice = data.c;
                                     const ytdChange = ((currentPrice - SPY_JAN_2026_PRICE) / SPY_JAN_2026_PRICE) * 100;
-                                    console.log(`✅ [S&P500] Current: $${currentPrice}, YTD: ${ytdChange.toFixed(2)}%`);
+                                    logDebug('success', `✅ [S&P500] Current: $${currentPrice}, YTD: ${ytdChange.toFixed(2)}%`);
                                     marketPerformance.value = ytdChange;
                                     return;
                                 } else {
-                                    console.error(`❌ [S&P500] No current price in data. c=${data.c}`);
+                                    logDebug('error', `❌ [S&P500] No current price in data. c=${data.c}`);
                                 }
                             } else {
                                 const errorText = await response.text();
-                                console.error(`❌ [S&P500] Finnhub API error: ${response.status} - ${errorText}`);
+                                logDebug('error', `❌ [S&P500] Finnhub API error: ${response.status} - ${errorText}`);
                             }
 
                             // If Finnhub fails, show null
                             marketPerformance.value = null;
                         } catch (e) {
-                            console.error(`❌ [S&P500] Market performance fetch exception:`, e.message, e);
+                            logDebug('error', `❌ [S&P500] Market performance fetch exception:`, e.message, e);
                             marketPerformance.value = null;
                         }
                     };
@@ -3019,7 +3082,10 @@
                         marketPerformance,
                         // Language
                         language,
-                        toggleLanguage
+                        toggleLanguage,
+                        // Debug
+                        showDebugConsole,
+                        debugLogs
                     };
                 }
             }).mount('#app');
