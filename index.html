@@ -936,7 +936,7 @@
 
             <!-- Toast Notification -->
             <transition name="fade">
-                <div v-if="toast.show" class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-xl shadow-xl max-w-md"
+                <div v-if="toast.show" class="fixed bottom-6 left-6 z-[9999] px-6 py-4 rounded-xl shadow-xl max-w-md"
                     :class="toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'">
                     <div class="flex items-center gap-3">
                         <svg v-if="toast.type === 'success'" class="w-5 h-5 text-white" fill="none"
@@ -1225,6 +1225,23 @@
                                 {{ language === 'TR' ? 'EN' : 'TR' }}
                             </button>
                         </div>
+
+                        <!-- Debug Console Toggle -->
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🐞</span>
+                                <span class="text-dark-300 text-sm">Debug Konsolu</span>
+                                <span v-if="debugLogs.length > 0"
+                                    class="bg-red-500 text-white text-[10px] min-w-[16px] h-[16px] flex items-center justify-center rounded-full leading-none">{{
+                                    debugLogs.length > 99 ? '99+' : debugLogs.length }}</span>
+                            </div>
+                            <button @click="showDebugConsole = !showDebugConsole"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="showDebugConsole ? 'bg-green-500' : 'bg-dark-600'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="showDebugConsole ? 'left-7' : 'left-1'"></div>
+                            </button>
+                        </div>
                     </div>
                 </transition>
             </div>
@@ -1253,13 +1270,6 @@
                     <span class="ml-1 whitespace-pre-wrap">{{ log.message }}</span>
                 </div>
             </div>
-            <button @click="showDebugConsole = !showDebugConsole"
-                class="pointer-events-auto bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded-full shadow-lg border border-dark-600 flex items-center gap-2 transition-all opacity-80 hover:opacity-100">
-                🐞 Debug
-                <span v-if="debugLogs.length > 0"
-                    class="bg-red-500 text-white text-[10px] min-w-[18px] h-[18px] flex items-center justify-center rounded-full leading-none">{{
-                    debugLogs.length > 99 ? '99+' : debugLogs.length }}</span>
-            </button>
         </div>
 
         <script>
@@ -2575,6 +2585,7 @@
                         isLoading.value = true;
                         let successCount = 0;
                         let failCount = 0;
+                        let failedAssets = [];
 
                         for (const asset of assets.value) {
                             const success = await fetchPriceForAsset(asset);
@@ -2582,6 +2593,7 @@
                                 successCount++;
                             } else {
                                 failCount++;
+                                failedAssets.push(asset.symbol);
                             }
                         }
 
@@ -2591,7 +2603,9 @@
                         savePreviousPrices();
 
                         if (failCount > 0) {
-                            showToast(`${successCount} başarılı, ${failCount} başarısız. Manuel fiyat girebilirsiniz.`, 'info');
+                            const failedList = failedAssets.join(', ');
+                            showToast(`${successCount} bulundu, ${failCount} bulunamadı: ${failedList}`, 'warning');
+                            logDebug('warn', `⚠️ Failed to fetch prices for: ${failedList}`);
                         } else {
                             showToast('Tüm fiyatlar güncellendi', 'success');
                         }
