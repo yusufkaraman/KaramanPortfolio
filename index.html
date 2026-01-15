@@ -1306,6 +1306,38 @@
                         else console.log(message, data || '');
                     };
 
+                    // Helper: Fetch with multiple CORS proxies as fallback
+                    const fetchWithCorsProxy = async (url) => {
+                        const proxies = [
+                            (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+                            (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+                            (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`
+                        ];
+
+                        for (let i = 0; i < proxies.length; i++) {
+                            try {
+                                const proxyUrl = proxies[i](url);
+                                logDebug('info', `📡 Trying proxy ${i + 1}/${proxies.length}...`);
+                                const response = await fetch(proxyUrl, { timeout: 10000 });
+
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    // Handle different proxy response formats
+                                    if (data.contents) {
+                                        // allorigins.win format
+                                        return { ok: true, data: JSON.parse(data.contents) };
+                                    } else {
+                                        // corsproxy.io and codetabs return raw JSON
+                                        return { ok: true, data };
+                                    }
+                                }
+                            } catch (e) {
+                                logDebug('warn', `Proxy ${i + 1} failed:`, e.message);
+                            }
+                        }
+                        return { ok: false, data: null };
+                    };
+
                     // State
                     const assets = ref([]);
                     const showAddModal = ref(false);
@@ -2338,84 +2370,59 @@
                             } else if (asset.type === 'gold') {
                                 const symbol = asset.symbol.toUpperCase();
 
-                                // Primary: Yahoo Finance for gold (GC=F) + USD/TRY conversion (CORS-compatible via proxy)
                                 try {
-                                    logDebug('info', `📡 [GOLD] Fetching gold price for ${symbol} via Yahoo Finance...`);
+                                    logDebug('info', `📡 [GOLD] Fetching gold price for ${symbol}...`);
 
                                     // Get gold price in USD from Yahoo Finance (GC=F = Gold Futures)
-                                    const goldUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d')}`;
-                                    const goldResponse = await fetch(goldUrl);
+                                    const goldResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d');
                                     trackApiCall('metals');
 
-                                    if (goldResponse.ok) {
-                                        const goldWrapper = await goldResponse.json();
-                                        const goldData = JSON.parse(goldWrapper.contents);
+                                    if (goldResult.ok && goldResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                        const goldUSD = goldResult.data.chart.result[0].meta.regularMarketPrice;
+                                        logDebug('info', `📊 [GOLD] Gold price: $${goldUSD.toFixed(2)}/oz`);
 
-                                        if (goldData.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                            const goldUSD = goldData.chart.result[0].meta.regularMarketPrice;
-                                            logDebug('info', `📊 [GOLD] Gold price: $${goldUSD.toFixed(2)}/oz (Yahoo Finance)`);
+                                        // Get USD/TRY rate
+                                        const tryResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d');
 
-                                            // Get USD/TRY rate
-                                            const tryUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d')}`;
-                                            const tryResponse = await fetch(tryUrl);
+                                        if (tryResult.ok && tryResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                            const usdTry = tryResult.data.chart.result[0].meta.regularMarketPrice;
+                                            logDebug('info', `📊 [GOLD] USD/TRY: ₺${usdTry.toFixed(4)}`);
 
-                                            if (tryResponse.ok) {
-                                                const tryWrapper = await tryResponse.json();
-                                                const tryData = JSON.parse(tryWrapper.contents);
+                                            const goldTryPerOz = goldUSD * usdTry;
+                                            const goldTryPerGram = goldTryPerOz / 31.1035;
 
-                                                if (tryData.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                                    const usdTry = tryData.chart.result[0].meta.regularMarketPrice;
-                                                    logDebug('info', `📊 [GOLD] USD/TRY rate: ₺${usdTry.toFixed(4)}`);
-
-                                                    const goldTryPerOz = goldUSD * usdTry;
-                                                    const goldTryPerGram = goldTryPerOz / 31.1035;
-
-                                                    if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
-                                                        asset.currentPrice = goldTryPerGram;
-                                                        logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (per gram via Yahoo Finance)`);
-                                                        return true;
-                                                    } else if (symbol === 'XAU' || symbol === 'OUNCE') {
-                                                        asset.currentPrice = goldTryPerOz;
-                                                        logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (per ounce via Yahoo Finance)`);
-                                                        return true;
-                                                    } else if (symbol === 'XAG' || symbol === 'SILVER') {
-                                                        // For silver, try fetching silver futures
-                                                        const silverUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/SI=F?interval=1d&range=1d')}`;
-                                                        const silverResponse = await fetch(silverUrl);
-                                                        if (silverResponse.ok) {
-                                                            const silverWrapper = await silverResponse.json();
-                                                            const silverData = JSON.parse(silverWrapper.contents);
-                                                            if (silverData.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                                                const silverUSD = silverData.chart.result[0].meta.regularMarketPrice;
-                                                                const silverTryPerOz = silverUSD * usdTry;
-                                                                const silverTryPerGram = silverTryPerOz / 31.1035;
-                                                                asset.currentPrice = silverTryPerGram;
-                                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (Silver per gram via Yahoo Finance)`);
-                                                                return true;
-                                                            }
-                                                        }
-                                                    }
-                                                    // Default to gold gram price
-                                                    asset.currentPrice = goldTryPerGram;
-                                                    logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)} (defaulting to Gold Gram)`);
+                                            if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
+                                                asset.currentPrice = goldTryPerGram;
+                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram`);
+                                                return true;
+                                            } else if (symbol === 'XAU' || symbol === 'OUNCE') {
+                                                asset.currentPrice = goldTryPerOz;
+                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/oz`);
+                                                return true;
+                                            } else if (symbol === 'XAG' || symbol === 'SILVER') {
+                                                const silverResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/SI=F?interval=1d&range=1d');
+                                                if (silverResult.ok && silverResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                                    const silverUSD = silverResult.data.chart.result[0].meta.regularMarketPrice;
+                                                    asset.currentPrice = (silverUSD * usdTry) / 31.1035;
+                                                    logDebug('success', `✅ [SILVER] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram`);
                                                     return true;
-                                                } else {
-                                                    logDebug('error', `❌ [GOLD] USD/TRY rate not found in response`);
                                                 }
-                                            } else {
-                                                logDebug('error', `❌ [GOLD] USD/TRY fetch failed: ${tryResponse.status}`);
                                             }
+                                            // Default to gold gram
+                                            asset.currentPrice = goldTryPerGram;
+                                            logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram (default)`);
+                                            return true;
                                         } else {
-                                            logDebug('error', `❌ [GOLD] Gold price not found in Yahoo Finance response`);
+                                            logDebug('error', `❌ [GOLD] USD/TRY rate not found`);
                                         }
                                     } else {
-                                        logDebug('error', `❌ [GOLD] Yahoo Finance gold fetch failed: ${goldResponse.status}`);
+                                        logDebug('error', `❌ [GOLD] Gold price fetch failed`);
                                     }
                                 } catch (e) {
-                                    logDebug('error', `❌ [GOLD] Yahoo Finance failed:`, e.message);
+                                    logDebug('error', `❌ [GOLD] Error:`, e.message);
                                 }
 
-                                logDebug('warn', 'Gold price fetch failed');
+                                logDebug('warn', '⚠️ Gold fetch failed - all proxies exhausted');
                                 return false;
 
                             } else if (asset.type === 'stock') {
