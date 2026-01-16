@@ -2980,10 +2980,10 @@
                     const fetchMarketPerformance = async () => {
                         logDebug('info', `\n📈 [S&P500] Fetching market performance...`);
                         try {
-                            // SPY price at Jan 1, 2026 (market open)
-                            // This is a baseline for YTD calculation
-                            const SPY_JAN_2026_PRICE = 599.50; // Update this as needed
-                            logDebug('info', `📊 [S&P500] Jan 2026 baseline price: $${SPY_JAN_2026_PRICE}`);
+                            // SPY opening price on Jan 2, 2026 (first trading day of year)
+                            // Source: Yahoo Finance, stockanalysis.com
+                            const SPY_JAN_2026_PRICE = 685.71;
+                            logDebug('info', `📊 [S&P500] Jan 2, 2026 baseline: $${SPY_JAN_2026_PRICE}`);
 
                             // Using Finnhub for SPY (S&P 500 ETF) current quote
                             const finnhubKey = 'd58oju1r01qvj8ihug50d58oju1r01qvj8ihug5g';
