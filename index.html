@@ -520,6 +520,50 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
+
+                <!-- Sort Dropdown -->
+                <div class="relative">
+                    <button @click="showSortMenu = !showSortMenu"
+                        class="flex items-center gap-2 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                        </svg>
+                        <span class="hidden sm:inline">{{ sortLabels[sortBy] }}</span>
+                    </button>
+                    <!-- Sort Menu -->
+                    <div v-if="showSortMenu" @click.away="showSortMenu = false"
+                        class="absolute top-full mt-2 right-0 bg-dark-800 border border-dark-600 rounded-xl shadow-xl z-50 min-w-[140px] overflow-hidden">
+                        <button v-for="(label, key) in sortLabels" :key="key"
+                            @click="sortBy = key; showSortMenu = false"
+                            class="w-full px-4 py-2 text-left text-sm hover:bg-dark-700 transition-colors"
+                            :class="sortBy === key ? 'text-blue-400 bg-dark-700' : 'text-white'">
+                            {{ label }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Weekly Summary Button -->
+                <button @click="showSummaryModal = true"
+                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span class="hidden sm:inline">Özet</span>
+                    <span class="sm:hidden">📋</span>
+                </button>
+
+                <!-- Widget Mode Toggle -->
+                <button @click="isWidgetMode = !isWidgetMode"
+                    class="flex items-center justify-center gap-2 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-all duration-300 border border-dark-600 hover:border-dark-500"
+                    :class="isWidgetMode ? 'ring-2 ring-blue-500' : ''">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    <span class="hidden sm:inline">Widget</span>
+                </button>
             </div>
 
             <!-- Last Update Info -->
@@ -532,8 +576,8 @@
             </div>
 
             <!-- Assets Grid -->
-            <div v-if="assets.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div v-for="(asset, index) in assets" :key="asset.id"
+            <div v-if="assets.length > 0 && !isWidgetMode" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="(asset, index) in sortedAssets" :key="asset.id"
                     class="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 cursor-move"
                     :class="{ 'dragging': dragIndex === index, 'drag-over': dragOverIndex === index }"
                     :style="heatmapEnabled && asset.currentPrice ? getHeatmapStyle(asset) : {}" draggable="true"
@@ -649,6 +693,38 @@
                                 </span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget Mode Compact View -->
+            <div v-if="assets.length > 0 && isWidgetMode" class="flex justify-center">
+                <div class="glass-card rounded-2xl p-6 max-w-sm w-full text-center">
+                    <div class="text-4xl font-bold text-white mb-2">
+                        {{ formatCurrencyDisplay(totalCurrentValue) }}
+                    </div>
+                    <div v-if="portfolioPerformance !== null" class="mb-4">
+                        <span :class="portfolioPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                            class="text-lg font-semibold">
+                            {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(2) }}%
+                        </span>
+                        <span class="text-dark-400 text-sm ml-2">toplam</span>
+                    </div>
+                    <div class="text-dark-400 text-sm mb-4">
+                        {{ assets.length }} varlık
+                    </div>
+                    <div class="flex gap-2 justify-center">
+                        <button @click="fetchAllPrices" :disabled="isLoading"
+                            class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors text-sm">
+                            {{ isLoading ? '...' : '🔄 Güncelle' }}
+                        </button>
+                        <button @click="isWidgetMode = false"
+                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm">
+                            📊 Genişlet
+                        </button>
+                    </div>
+                    <div v-if="lastUpdate" class="text-dark-500 text-xs mt-3">
+                        {{ lastUpdate }}
                     </div>
                 </div>
             </div>
@@ -1113,15 +1189,117 @@
                         </div>
 
                         <!-- History Tab -->
-                        <div v-else-if="chartTab === 'history'" class="text-center py-8">
-                            <div class="text-6xl mb-4">📅</div>
-                            <h3 class="text-white font-semibold mb-2">Geçmiş Grafik</h3>
-                            <p class="text-dark-400 text-sm mb-4">Portföy değerinin zaman içindeki değişimi</p>
-                            <div class="glass-card rounded-xl p-6">
-                                <p class="text-dark-500">Yakında eklenecek...</p>
-                                <p class="text-dark-600 text-xs mt-2">Geçmiş veriler kaydedilmeye başlandı.</p>
+                        <div v-else-if="chartTab === 'history'" class="space-y-4">
+                            <h3 class="text-white font-semibold">📅 Portföy Geçmişi</h3>
+
+                            <div v-if="portfolioHistory.length === 0" class="text-center py-8">
+                                <div class="text-6xl mb-4">📊</div>
+                                <p class="text-dark-400">Henüz geçmiş verisi yok</p>
+                                <p class="text-dark-500 text-sm mt-2">Her gün portföy değeriniz kaydedilecek</p>
+                            </div>
+
+                            <div v-else>
+                                <!-- Mini Chart (SVG Line Graph) -->
+                                <div class="glass-card rounded-xl p-4 mb-4">
+                                    <svg viewBox="0 0 300 100" class="w-full h-32">
+                                        <!-- Background grid -->
+                                        <line x1="0" y1="25" x2="300" y2="25" stroke="#334155" stroke-width="0.5" />
+                                        <line x1="0" y1="50" x2="300" y2="50" stroke="#334155" stroke-width="0.5" />
+                                        <line x1="0" y1="75" x2="300" y2="75" stroke="#334155" stroke-width="0.5" />
+
+                                        <!-- Line graph -->
+                                        <polyline fill="none" stroke="#60a5fa" stroke-width="2" :points="portfolioHistory.slice(-30).map((h, i, arr) => {
+                                                const maxVal = Math.max(...arr.map(x => x.totalValue));
+                                                const minVal = Math.min(...arr.map(x => x.totalValue));
+                                                const range = maxVal - minVal || 1;
+                                                const x = (i / Math.max(arr.length - 1, 1)) * 290 + 5;
+                                                const y = 95 - ((h.totalValue - minVal) / range * 80 + 5);
+                                                return `${x},${y}`;
+                                            }).join(' ')" />
+
+                                        <!-- Dots at data points -->
+                                        <circle v-for="(h, i) in portfolioHistory.slice(-30)" :key="h.date"
+                                            :cx="(i / Math.max(portfolioHistory.slice(-30).length - 1, 1)) * 290 + 5"
+                                            :cy="95 - ((h.totalValue - Math.min(...portfolioHistory.slice(-30).map(x => x.totalValue))) / 
+                                                 (Math.max(...portfolioHistory.slice(-30).map(x => x.totalValue)) - Math.min(...portfolioHistory.slice(-30).map(x => x.totalValue)) || 1) * 80 + 5)"
+                                            r="3" fill="#60a5fa" />
+                                    </svg>
+                                    <div class="flex justify-between text-xs text-dark-400 mt-2">
+                                        <span>{{ portfolioHistory[0]?.date }}</span>
+                                        <span>{{ portfolioHistory[portfolioHistory.length - 1]?.date }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- History Table -->
+                                <div class="max-h-48 overflow-y-auto space-y-1">
+                                    <div v-for="(h, i) in [...portfolioHistory].reverse().slice(0, 30)" :key="h.date"
+                                        class="flex justify-between items-center p-2 rounded-lg hover:bg-dark-700 text-sm">
+                                        <span class="text-dark-300">{{ h.date }}</span>
+                                        <div class="text-right">
+                                            <span class="text-white font-medium">₺{{ formatNumber(h.totalValue)
+                                                }}</span>
+                                            <span v-if="i < portfolioHistory.length - 1" class="ml-2 text-xs"
+                                                :class="h.totalValue >= [...portfolioHistory].reverse()[i+1]?.totalValue ? 'text-emerald-400' : 'text-red-400'">
+                                                {{ h.totalValue >= [...portfolioHistory].reverse()[i+1]?.totalValue ?
+                                                '▲' : '▼' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p class="text-dark-500 text-xs text-center mt-3">
+                                    {{ portfolioHistory.length }} gün kaydedildi (son 30 gün gösteriliyor)
+                                </p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- Weekly Summary Modal -->
+            <transition name="fade">
+                <div v-if="showSummaryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showSummaryModal = false"></div>
+                    <div class="relative glass-card rounded-2xl p-6 w-full max-w-md">
+                        <button @click="showSummaryModal = false"
+                            class="absolute top-4 right-4 p-2 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <h2 class="text-2xl font-bold text-white mb-4">📋 Haftalık Özet</h2>
+
+                        <!-- Summary Preview -->
+                        <div class="glass-card rounded-xl p-4 mb-4 max-h-64 overflow-y-auto">
+                            <pre
+                                class="text-sm text-dark-200 whitespace-pre-wrap font-sans">{{ generateWeeklySummary() }}</pre>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3">
+                            <button @click="copySummaryToClipboard"
+                                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-medium rounded-xl transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Kopyala
+                            </button>
+                            <button @click="openEmailSummary"
+                                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium rounded-xl transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                E-posta
+                            </button>
+                        </div>
+
+                        <p class="text-dark-500 text-xs text-center mt-4">
+                            Özeti e-posta ile göndermek için varsayılan e-posta uygulamanız açılacaktır.
+                        </p>
                     </div>
                 </div>
             </transition>
@@ -1397,6 +1575,19 @@
                     const logoZoom = ref(10);
                     const showSettingsMenu = ref(false);
                     const language = ref('TR'); // 'TR' or 'EN'
+
+                    // Sort options: 'value', 'gain', 'alpha', 'type'
+                    const sortBy = ref('value');
+                    const showSortMenu = ref(false);
+
+                    // Widget mode (compact view)
+                    const isWidgetMode = ref(false);
+
+                    // Portfolio history (daily snapshots)
+                    const portfolioHistory = ref([]);
+
+                    // Weekly summary modal
+                    const showSummaryModal = ref(false);
 
                     // Load settings from localStorage
                     const loadSettings = () => {
@@ -2947,14 +3138,17 @@
                     };
 
                     // Initialize
-                    onMounted(() => {
+                    onMounted(async () => {
                         loadFromStorage();
                         loadApiUsage();
                         loadSettings();
                         loadPreviousPrices();
+                        loadPortfolioHistory();
                         fetchMarketPerformance(); // Fetch S&P 500 data
                         if (assets.value.length > 0) {
-                            fetchAllPrices();
+                            await fetchAllPrices();
+                            // Save daily snapshot after prices are updated
+                            saveHistorySnapshot();
                         }
                     });
 
@@ -2975,6 +3169,145 @@
                         if (!hasAnyCost || totalCost === 0) return null;
                         return ((totalValue - totalCost) / totalCost) * 100;
                     });
+
+                    // Sorted assets computed property
+                    const sortedAssets = computed(() => {
+                        const assetsCopy = [...assets.value];
+                        switch (sortBy.value) {
+                            case 'value':
+                                return assetsCopy.sort((a, b) =>
+                                    (b.currentPrice || 0) * b.quantity - (a.currentPrice || 0) * a.quantity);
+                            case 'gain':
+                                return assetsCopy.sort((a, b) => {
+                                    const gainA = a.costPerUnit ? ((a.currentPrice || 0) - a.costPerUnit) / a.costPerUnit * 100 : 0;
+                                    const gainB = b.costPerUnit ? ((b.currentPrice || 0) - b.costPerUnit) / b.costPerUnit * 100 : 0;
+                                    return gainB - gainA;
+                                });
+                            case 'alpha':
+                                return assetsCopy.sort((a, b) => a.symbol.localeCompare(b.symbol));
+                            case 'type':
+                                return assetsCopy.sort((a, b) => a.type.localeCompare(b.type));
+                            default:
+                                return assetsCopy;
+                        }
+                    });
+
+                    // Sort labels
+                    const sortLabels = {
+                        value: 'Değer',
+                        gain: 'Kar/Zarar',
+                        alpha: 'A-Z',
+                        type: 'Tür'
+                    };
+
+                    // Portfolio History Functions
+                    const loadPortfolioHistory = () => {
+                        const saved = localStorage.getItem('finance_tracker_history');
+                        if (saved) {
+                            portfolioHistory.value = JSON.parse(saved);
+                        }
+                    };
+
+                    const savePortfolioHistory = () => {
+                        localStorage.setItem('finance_tracker_history', JSON.stringify(portfolioHistory.value));
+                    };
+
+                    const saveHistorySnapshot = () => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const existing = portfolioHistory.value.find(h => h.date === today);
+
+                        if (!existing && totalCurrentValue.value > 0) {
+                            portfolioHistory.value.push({
+                                date: today,
+                                totalValue: totalCurrentValue.value,
+                                assetCount: assets.value.length
+                            });
+                            // Keep only last 365 days
+                            if (portfolioHistory.value.length > 365) {
+                                portfolioHistory.value = portfolioHistory.value.slice(-365);
+                            }
+                            savePortfolioHistory();
+                            logDebug('success', `📸 Portfolio snapshot saved for ${today}: ₺${totalCurrentValue.value.toFixed(2)}`);
+                        }
+                    };
+
+                    // Weekly Summary Generator
+                    const generateWeeklySummary = () => {
+                        const now = new Date();
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        const weekAgoStr = weekAgo.toISOString().split('T')[0];
+
+                        // Find week-old snapshot
+                        const weekAgoSnapshot = portfolioHistory.value.find(h => h.date === weekAgoStr);
+                        const weeklyChange = weekAgoSnapshot
+                            ? ((totalCurrentValue.value - weekAgoSnapshot.totalValue) / weekAgoSnapshot.totalValue * 100)
+                            : null;
+                        const weeklyChangeValue = weekAgoSnapshot
+                            ? totalCurrentValue.value - weekAgoSnapshot.totalValue
+                            : null;
+
+                        // Top performers
+                        const withGain = assets.value
+                            .filter(a => a.costPerUnit && a.currentPrice)
+                            .map(a => ({
+                                symbol: a.symbol,
+                                gain: ((a.currentPrice - a.costPerUnit) / a.costPerUnit * 100)
+                            }))
+                            .sort((a, b) => b.gain - a.gain);
+
+                        const topPerformers = withGain.slice(0, 3);
+                        const worstPerformers = withGain.slice(-3).reverse();
+
+                        const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                        let summary = `📊 Haftalık Portföy Özeti\n`;
+                        summary += `📅 ${dateStr}\n\n`;
+                        summary += `💰 Toplam Değer: ₺${formatNumber(totalCurrentValue.value)}\n`;
+
+                        if (weeklyChange !== null) {
+                            const sign = weeklyChange >= 0 ? '+' : '';
+                            summary += `📈 Haftalık Değişim: ${sign}${weeklyChange.toFixed(2)}% (₺${formatNumber(weeklyChangeValue)})\n`;
+                        }
+
+                        if (portfolioPerformance.value !== null) {
+                            const sign = portfolioPerformance.value >= 0 ? '+' : '';
+                            summary += `📊 Toplam Performans: ${sign}${portfolioPerformance.value.toFixed(2)}%\n`;
+                        }
+
+                        summary += `\n🏆 En İyi Performans:\n`;
+                        topPerformers.forEach((p, i) => {
+                            const sign = p.gain >= 0 ? '+' : '';
+                            summary += `${i + 1}. ${p.symbol} ${sign}${p.gain.toFixed(1)}%\n`;
+                        });
+
+                        if (worstPerformers.length > 0 && worstPerformers[0].gain < 0) {
+                            summary += `\n📉 En Kötü Performans:\n`;
+                            worstPerformers.filter(p => p.gain < 0).forEach((p, i) => {
+                                summary += `${i + 1}. ${p.symbol} ${p.gain.toFixed(1)}%\n`;
+                            });
+                        }
+
+                        summary += `\n📋 Varlık Sayısı: ${assets.value.length}`;
+
+                        return summary;
+                    };
+
+                    const openEmailSummary = () => {
+                        const summary = generateWeeklySummary();
+                        const subject = encodeURIComponent('Haftalık Portföy Özeti - ' + new Date().toLocaleDateString('tr-TR'));
+                        const body = encodeURIComponent(summary);
+                        window.open(`mailto:?subject=${subject}&body=${body}`);
+                    };
+
+                    const copySummaryToClipboard = async () => {
+                        const summary = generateWeeklySummary();
+                        try {
+                            await navigator.clipboard.writeText(summary);
+                            showToast('Özet panoya kopyalandı', 'success');
+                        } catch (e) {
+                            showToast('Kopyalama başarısız', 'error');
+                        }
+                    };
 
                     // Fetch S&P 500 YTD performance (from Jan 1, 2026)
                     const fetchMarketPerformance = async () => {
@@ -3110,7 +3443,21 @@
                         toggleLanguage,
                         // Debug
                         showDebugConsole,
-                        debugLogs
+                        debugLogs,
+                        // Sort Options
+                        sortBy,
+                        sortedAssets,
+                        sortLabels,
+                        showSortMenu,
+                        // Widget Mode
+                        isWidgetMode,
+                        // Portfolio History
+                        portfolioHistory,
+                        // Weekly Summary
+                        showSummaryModal,
+                        generateWeeklySummary,
+                        openEmailSummary,
+                        copySummaryToClipboard
                     };
                 }
             }).mount('#app');
