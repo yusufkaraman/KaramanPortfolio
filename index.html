@@ -811,9 +811,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v2.7.2</span>
+                        📦 Versiyon: <span class="text-dark-400 font-mono">v3.0.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24b</span>
+                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24c</span>
                     </p>
                 </div>
             </div>
@@ -2568,150 +2568,30 @@
                                 try {
                                     logDebug('info', `📡 [GOLD] Fetching gold price for ${symbol}...`);
 
-                                    // Try Gold-API.com first (via CORS proxy)
-                                    try {
-                                        logDebug('info', `📡 [GOLD] Trying Gold-API.com via proxy...`);
-                                        const goldApiKey = 'd8aa2aad0e07471f9a28f6c0e8995058a9927e2385b3d75d2db388b312f64092';
+                                    // Use Cloudflare Worker (100% reliable, no CORS issues!)
+                                    logDebug('info', `📡 [GOLD] Using Cloudflare Worker...`);
+                                    const workerResponse = await fetch('https://gold-price-api.yusufkaraman68.workers.dev/');
 
-                                        // Use corsproxy.io to access Gold-API
-                                        const goldApiUrl = `https://api.gold-api.com/price/XAU`;
-                                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(goldApiUrl)}`;
+                                    if (workerResponse.ok) {
+                                        const data = await workerResponse.json();
 
-                                        const goldApiResponse = await fetch(proxyUrl, {
-                                            headers: { 'x-access-token': goldApiKey }
-                                        });
-
-                                        if (goldApiResponse.ok) {
-                                            const goldApiData = await goldApiResponse.json();
-                                            if (goldApiData.price && goldApiData.price > 0) {
-                                                // Gold price is in USD per troy ounce
-                                                const goldUSD = goldApiData.price;
-                                                logDebug('info', `📊 [GOLD] Gold-API: $${goldUSD.toFixed(2)}/oz`);
-
-                                                // Get USD/TRY rate using exchangerate-api (more reliable)
-                                                const exchangeResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                                                if (exchangeResponse.ok) {
-                                                    const exchangeData = await exchangeResponse.json();
-                                                    const usdTry = exchangeData.rates?.TRY;
-                                                    if (usdTry) {
-                                                        const goldTryPerGram = (goldUSD * usdTry) / 31.1035;
-                                                        asset.currentPrice = goldTryPerGram;
-                                                        logDebug('success', `✅ [GOLD] Gold-API: ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
-                                                        trackApiCall('metals');
-                                                        return true;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } catch (goldApiError) {
-                                        logDebug('warn', `⚠️ [GOLD] Gold-API failed:`, goldApiError.message);
-                                    }
-
-                                    // Try BigPara API second (direct TRY price)
-                                    try {
-                                        logDebug('info', `📡 [GOLD] Trying BigPara API...`);
-                                        const bigparaResult = await fetchWithCorsProxy('https://api.bigpara.hurriyet.com.tr/doviz/headerlist/anasayfa');
-
-                                        if (bigparaResult.ok && bigparaResult.data) {
-                                            // Find gold in the response
-                                            const goldData = bigparaResult.data.find(item =>
-                                                item.name === 'GRAM ALTIN' ||
-                                                item.code === 'GAU' ||
-                                                item.name?.includes('Altın')
-                                            );
-
-                                            if (goldData && goldData.spiSatis) {
-                                                const price = parseFloat(goldData.spiSatis.replace('.', '').replace(',', '.'));
-                                                if (price > 0) {
-                                                    asset.currentPrice = price;
-                                                    logDebug('success', `✅ [GOLD] BigPara: ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
-                                                    trackApiCall('metals');
-                                                    return true;
-                                                }
-                                            }
-                                            logDebug('warn', `⚠️ [GOLD] BigPara: Gold not found in response`);
-                                        }
-                                    } catch (bigparaError) {
-                                        logDebug('warn', `⚠️ [GOLD] BigPara failed:`, bigparaError.message);
-                                    }
-
-                                    // Fallback to Yahoo Finance
-                                    logDebug('info', `📡 [GOLD] Trying Yahoo Finance fallback...`);
-                                    const goldResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d');
-                                    trackApiCall('metals');
-
-                                    if (goldResult.ok && goldResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                        const goldUSD = goldResult.data.chart.result[0].meta.regularMarketPrice;
-                                        logDebug('info', `📊 [GOLD] Gold price: $${goldUSD.toFixed(2)}/oz`);
-
-                                        // Get USD/TRY rate
-                                        const tryResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d');
-
-                                        if (tryResult.ok && tryResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                            const usdTry = tryResult.data.chart.result[0].meta.regularMarketPrice;
-                                            logDebug('info', `📊 [GOLD] USD/TRY: ₺${usdTry.toFixed(4)}`);
-
-                                            const goldTryPerOz = goldUSD * usdTry;
-                                            const goldTryPerGram = goldTryPerOz / 31.1035;
-
-                                            if (symbol === 'GAU' || symbol === 'GRAM' || symbol === 'GOLD') {
-                                                asset.currentPrice = goldTryPerGram;
-                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram`);
-                                                return true;
-                                            } else if (symbol === 'XAU' || symbol === 'OUNCE') {
-                                                asset.currentPrice = goldTryPerOz;
-                                                logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/oz`);
-                                                return true;
-                                            } else if (symbol === 'XAG' || symbol === 'SILVER') {
-                                                const silverResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/SI=F?interval=1d&range=1d');
-                                                if (silverResult.ok && silverResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                                                    const silverUSD = silverResult.data.chart.result[0].meta.regularMarketPrice;
-                                                    asset.currentPrice = (silverUSD * usdTry) / 31.1035;
-                                                    logDebug('success', `✅ [SILVER] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram`);
-                                                    return true;
-                                                }
-                                            }
-                                            // Default to gold gram
-                                            asset.currentPrice = goldTryPerGram;
-                                            logDebug('success', `✅ [GOLD] ${symbol}: ₺${asset.currentPrice.toFixed(2)}/gram (default)`);
+                                        if (data.goldTryPerGram && data.goldTryPerGram > 0) {
+                                            asset.currentPrice = data.goldTryPerGram;
+                                            logDebug('success', `✅ [GOLD] ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
+                                            logDebug('info', `📊 Details: $${data.goldUSD?.toFixed(2)}/oz, USD/TRY: ${data.usdTry}`);
+                                            trackApiCall('metals');
                                             return true;
-                                        } else {
-                                            logDebug('error', `❌ [GOLD] USD/TRY rate not found`);
+                                        } else if (data.error) {
+                                            logDebug('error', `❌ [GOLD] Worker error: ${data.error}`);
                                         }
                                     } else {
-                                        logDebug('error', `❌ [GOLD] Gold price fetch failed`);
+                                        logDebug('error', `❌ [GOLD] Worker response: ${workerResponse.status}`);
                                     }
-                                } catch (e) {
-                                    logDebug('error', `❌ [GOLD] Error:`, e.message);
+                                } catch (error) {
+                                    logDebug('error', `❌ [GOLD] Error: ${error.message}`);
                                 }
 
-                                // Final fallback: Try Gold-API directly (might work in some browsers)
-                                try {
-                                    logDebug('info', `📡 [GOLD] Final attempt: Direct Gold-API call...`);
-                                    const goldApiKey = 'd8aa2aad0e07471f9a28f6c0e8995058a9927e2385b3d75d2db388b312f64092';
-                                    const directResponse = await fetch('https://api.gold-api.com/price/XAU', {
-                                        headers: { 'x-access-token': goldApiKey },
-                                        mode: 'cors'
-                                    });
-                                    if (directResponse.ok) {
-                                        const data = await directResponse.json();
-                                        if (data.price > 0) {
-                                            // Get exchange rate
-                                            const exResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                                            if (exResponse.ok) {
-                                                const exData = await exResponse.json();
-                                                const usdTry = exData.rates?.TRY || 35.5; // Fallback rate
-                                                asset.currentPrice = (data.price * usdTry) / 31.1035;
-                                                logDebug('success', `✅ [GOLD] Direct API: ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
-                                                return true;
-                                            }
-                                        }
-                                    }
-                                } catch (directError) {
-                                    logDebug('warn', `⚠️ [GOLD] Direct call failed:`, directError.message);
-                                }
-
-                                logDebug('warn', '⚠️ Gold fetch failed - all methods exhausted. Use Manual Price Entry.');
+                                logDebug('warn', '⚠️ Gold fetch failed. Use Manual Price Entry.');
                                 return false;
 
                             } else if (asset.type === 'stock') {
