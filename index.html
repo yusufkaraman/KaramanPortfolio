@@ -811,9 +811,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v2.6.0</span>
+                        📦 Versiyon: <span class="text-dark-400 font-mono">v2.7.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-23b</span>
+                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-23c</span>
                     </p>
                 </div>
             </div>
@@ -2568,7 +2568,39 @@
                                 try {
                                     logDebug('info', `📡 [GOLD] Fetching gold price for ${symbol}...`);
 
-                                    // Try BigPara API first (direct TRY price)
+                                    // Try Gold-API.com first (CORS enabled, no rate limits)
+                                    try {
+                                        logDebug('info', `📡 [GOLD] Trying Gold-API.com...`);
+                                        const goldApiKey = 'd8aa2aad0e07471f9a28f6c0e8995058a9927e2385b3d75d2db388b312f64092';
+                                        const goldApiResponse = await fetch('https://api.gold-api.com/price/XAU', {
+                                            headers: { 'x-access-token': goldApiKey }
+                                        });
+
+                                        if (goldApiResponse.ok) {
+                                            const goldApiData = await goldApiResponse.json();
+                                            if (goldApiData.price && goldApiData.price > 0) {
+                                                // Gold price is in USD per troy ounce
+                                                const goldUSD = goldApiData.price;
+                                                logDebug('info', `📊 [GOLD] Gold-API: $${goldUSD.toFixed(2)}/oz`);
+
+                                                // Get USD/TRY rate for conversion
+                                                const tryResult = await fetchWithCorsProxy('https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d');
+                                                if (tryResult.ok && tryResult.data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                                                    const usdTry = tryResult.data.chart.result[0].meta.regularMarketPrice;
+                                                    const goldTryPerGram = (goldUSD * usdTry) / 31.1035;
+
+                                                    asset.currentPrice = goldTryPerGram;
+                                                    logDebug('success', `✅ [GOLD] Gold-API: ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
+                                                    trackApiCall('metals');
+                                                    return true;
+                                                }
+                                            }
+                                        }
+                                    } catch (goldApiError) {
+                                        logDebug('warn', `⚠️ [GOLD] Gold-API failed:`, goldApiError.message);
+                                    }
+
+                                    // Try BigPara API second (direct TRY price)
                                     try {
                                         logDebug('info', `📡 [GOLD] Trying BigPara API...`);
                                         const bigparaResult = await fetchWithCorsProxy('https://api.bigpara.hurriyet.com.tr/doviz/headerlist/anasayfa');
