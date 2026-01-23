@@ -1484,20 +1484,29 @@
                         else console.log(message, data || '');
                     };
 
-                    // Helper: Fetch via CORS proxy (allorigins.win)
+                    // Helper: Fetch via CORS proxy (with fallbacks)
                     const fetchWithCorsProxy = async (url) => {
-                        try {
-                            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                            const response = await fetch(proxyUrl);
+                        const proxies = [
+                            { name: 'corsproxy.io', build: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`, parse: (d) => d },
+                            { name: 'thingproxy', build: (u) => `https://thingproxy.freeboard.io/fetch/${u}`, parse: (d) => d },
+                            { name: 'allorigins', build: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, parse: (d) => JSON.parse(d.contents) }
+                        ];
 
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data.contents) {
-                                    return { ok: true, data: JSON.parse(data.contents) };
+                        for (const proxy of proxies) {
+                            try {
+                                const proxyUrl = proxy.build(url);
+                                logDebug('info', `📡 Trying ${proxy.name}...`);
+                                const response = await fetch(proxyUrl);
+
+                                if (response.ok) {
+                                    const rawData = await response.json();
+                                    const data = proxy.parse(rawData);
+                                    logDebug('success', `✅ ${proxy.name} worked!`);
+                                    return { ok: true, data };
                                 }
+                            } catch (e) {
+                                logDebug('warn', `${proxy.name} failed:`, e.message);
                             }
-                        } catch (e) {
-                            logDebug('error', `Proxy failed:`, e.message);
                         }
                         return { ok: false, data: null };
                     };
