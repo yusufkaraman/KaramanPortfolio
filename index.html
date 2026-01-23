@@ -811,9 +811,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v2.7.1</span>
+                        📦 Versiyon: <span class="text-dark-400 font-mono">v2.7.2</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24</span>
+                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24b</span>
                     </p>
                 </div>
             </div>
@@ -2685,7 +2685,33 @@
                                     logDebug('error', `❌ [GOLD] Error:`, e.message);
                                 }
 
-                                logDebug('warn', '⚠️ Gold fetch failed - all proxies exhausted');
+                                // Final fallback: Try Gold-API directly (might work in some browsers)
+                                try {
+                                    logDebug('info', `📡 [GOLD] Final attempt: Direct Gold-API call...`);
+                                    const goldApiKey = 'd8aa2aad0e07471f9a28f6c0e8995058a9927e2385b3d75d2db388b312f64092';
+                                    const directResponse = await fetch('https://api.gold-api.com/price/XAU', {
+                                        headers: { 'x-access-token': goldApiKey },
+                                        mode: 'cors'
+                                    });
+                                    if (directResponse.ok) {
+                                        const data = await directResponse.json();
+                                        if (data.price > 0) {
+                                            // Get exchange rate
+                                            const exResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                                            if (exResponse.ok) {
+                                                const exData = await exResponse.json();
+                                                const usdTry = exData.rates?.TRY || 35.5; // Fallback rate
+                                                asset.currentPrice = (data.price * usdTry) / 31.1035;
+                                                logDebug('success', `✅ [GOLD] Direct API: ${symbol} = ₺${asset.currentPrice.toFixed(2)}/gram`);
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                } catch (directError) {
+                                    logDebug('warn', `⚠️ [GOLD] Direct call failed:`, directError.message);
+                                }
+
+                                logDebug('warn', '⚠️ Gold fetch failed - all methods exhausted. Use Manual Price Entry.');
                                 return false;
 
                             } else if (asset.type === 'stock') {
