@@ -730,7 +730,7 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else class="glass-card rounded-2xl p-12 text-center">
+            <div v-if="assets.length === 0" class="glass-card rounded-2xl p-12 text-center">
                 <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-dark-800 flex items-center justify-center">
                     <svg class="w-12 h-12 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -811,9 +811,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v3.0.0</span>
+                        📦 Versiyon: <span class="text-dark-400 font-mono">v3.1.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24c</span>
+                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24d</span>
                     </p>
                 </div>
             </div>
@@ -2777,19 +2777,25 @@
                         }
 
                         isLoading.value = true;
+                        logDebug('info', `📡 Fetching prices for ${assets.value.length} assets in parallel...`);
+
+                        // Fetch ALL prices in PARALLEL for maximum speed!
+                        const results = await Promise.allSettled(
+                            assets.value.map(asset => fetchPriceForAsset(asset))
+                        );
+
                         let successCount = 0;
                         let failCount = 0;
                         let failedAssets = [];
 
-                        for (const asset of assets.value) {
-                            const success = await fetchPriceForAsset(asset);
-                            if (success) {
+                        results.forEach((result, index) => {
+                            if (result.status === 'fulfilled' && result.value === true) {
                                 successCount++;
                             } else {
                                 failCount++;
-                                failedAssets.push(asset.symbol);
+                                failedAssets.push(assets.value[index].symbol);
                             }
-                        }
+                        });
 
                         isLoading.value = false;
                         lastUpdate.value = new Date().toLocaleString('tr-TR');
@@ -2802,6 +2808,7 @@
                             logDebug('warn', `⚠️ Failed to fetch prices for: ${failedList}`);
                         } else {
                             showToast('Tüm fiyatlar güncellendi', 'success');
+                            logDebug('success', `✅ All ${successCount} prices updated!`);
                         }
                     };
 
