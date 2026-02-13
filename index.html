@@ -514,6 +514,7 @@
                         <option value="TRY">🇹🇷 TRY</option>
                         <option value="USD">🇺🇸 USD</option>
                         <option value="EUR">🇪🇺 EUR</option>
+                        <option value="PLN">🇵🇱 PLN</option>
                     </select>
                     <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 pointer-events-none"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1556,7 +1557,8 @@
                     const exchangeRates = reactive({
                         TRY: 1,
                         USD: 1,
-                        EUR: 1
+                        EUR: 1,
+                        PLN: 1
                     });
 
                     // Chart colors
@@ -2831,7 +2833,7 @@
                     };
 
                     // Currency display formatting
-                    const currencySymbols = { TRY: '₺', USD: '$', EUR: '€' };
+                    const currencySymbols = { TRY: '₺', USD: '$', EUR: '€', PLN: 'zł' };
 
                     const formatCurrencyDisplay = (value) => {
                         if (!value) return currencySymbols[selectedCurrency.value] + '0,00';
@@ -2852,6 +2854,7 @@
                                 exchangeRates.TRY = 1;
                                 exchangeRates.USD = data.rates.USD;
                                 exchangeRates.EUR = data.rates.EUR;
+                                exchangeRates.PLN = data.rates.PLN;
                                 trackApiCall('exchange');
                             }
                         } catch (e) {
