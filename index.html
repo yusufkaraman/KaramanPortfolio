@@ -332,6 +332,271 @@
             font-weight: 600;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
+
+        /* AI Chatbot Styles */
+        .chatbot-fab {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 60;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: chatbot-pulse 3s ease-in-out infinite;
+        }
+
+        .chatbot-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4);
+        }
+
+        .chatbot-fab svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+            transition: transform 0.3s;
+        }
+
+        .chatbot-fab:hover svg {
+            transform: rotate(15deg);
+        }
+
+        @keyframes chatbot-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 4px 30px rgba(99, 102, 241, 0.7), 0 0 60px rgba(139, 92, 246, 0.4);
+            }
+        }
+
+        .chatbot-window {
+            position: fixed;
+            bottom: 96px;
+            left: 24px;
+            z-index: 60;
+            width: 400px;
+            max-width: calc(100vw - 48px);
+            height: 550px;
+            max-height: calc(100vh - 140px);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 80px rgba(99, 102, 241, 0.15);
+            animation: chatbot-slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes chatbot-slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .chatbot-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chatbot-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chatbot-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chatbot-messages::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 2px;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-msg.ai {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-msg.system {
+            align-self: center;
+            background: rgba(99, 102, 241, 0.1);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 13px;
+            text-align: center;
+            border-radius: 12px;
+        }
+
+        .chatbot-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .chatbot-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chatbot-input-area input:focus {
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .chatbot-input-area input::placeholder {
+            color: #64748b;
+        }
+
+        .chatbot-send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .chatbot-send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+        }
+
+        .chatbot-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 4px 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #6366f1;
+            border-radius: 50%;
+            animation: typing-bounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        .chatbot-key-setup {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            gap: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .chatbot-window {
+                left: 8px;
+                right: 8px;
+                bottom: 88px;
+                width: auto;
+                max-width: none;
+                height: calc(100vh - 120px);
+            }
+
+            .chatbot-fab {
+                bottom: 16px;
+                left: 16px;
+                width: 52px;
+                height: 52px;
+            }
+        }
     </style>
 </head>
 
@@ -812,9 +1077,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v3.1.0</span>
+                        📦 Versiyon: <span class="text-dark-400 font-mono">v4.0.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-01-24d</span>
+                        🗓️ Build: <span class="text-dark-400 font-mono">2026-03-02</span>
                     </p>
                 </div>
             </div>
@@ -1435,6 +1700,84 @@
             </div>
         </div>
 
+        <!-- AI Chatbot FAB Button -->
+        <button v-if="!showChatbot" @click="showChatbot = true" class="chatbot-fab" title="AI Finans Danışmanı">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+        </button>
+
+        <!-- AI Chatbot Window -->
+        <transition name="fade">
+            <div v-if="showChatbot" class="chatbot-window">
+                <!-- Header -->
+                <div class="chatbot-header">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-semibold text-sm">AI Finans Danışmanı</h3>
+                            <p class="text-indigo-300 text-xs">Gemini ile güçlendirildi</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button @click="clearChatHistory"
+                            class="p-1.5 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors"
+                            title="Sohbeti Temizle">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                        <button @click="showChatbot = false"
+                            class="p-1.5 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="chatbot-messages" ref="chatMessagesRef">
+                    <!-- Welcome message -->
+                    <div v-if="chatMessages.length === 0" class="chat-msg system">
+                        🤖 Merhaba! Ben senin AI finans danışmanınım. Portföyün hakkında sorular sorabilir, yatırım
+                        stratejileri öğrenebilir veya piyasa trendleri hakkında konuşabiliriz.
+                    </div>
+                    <div v-for="(msg, i) in chatMessages" :key="i" class="chat-msg" :class="msg.role">
+                        {{ msg.content }}
+                    </div>
+                    <!-- Typing indicator -->
+                    <div v-if="isChatLoading" class="chat-msg ai">
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="chatbot-input-area">
+                    <input v-model="chatInput" @keydown.enter="sendChatMessage" placeholder="Mesajınızı yazın..."
+                        :disabled="isChatLoading" />
+                    <button @click="sendChatMessage" :disabled="isChatLoading || !chatInput.trim()"
+                        class="chatbot-send-btn">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
         <!-- Debug Console -->
         <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none">
             <div v-if="showDebugConsole"
@@ -1608,6 +1951,127 @@
 
                     // Weekly summary modal
                     const showSummaryModal = ref(false);
+
+                    // ========== AI CHATBOT STATE ==========
+                    const showChatbot = ref(false);
+                    const chatMessages = ref([]);
+                    const chatInput = ref('');
+                    const isChatLoading = ref(false);
+                    const chatMessagesRef = ref(null);
+                    const GEMINI_API_KEY = 'AIzaSyChU_kj9fE7IRVw6LAuJKKuMcNJj2XCNPY';
+
+                    // Build portfolio context for AI
+                    const buildPortfolioContext = () => {
+                        const total = totalCurrentValue.value;
+                        const assetDetails = assets.value.map(asset => {
+                            const value = asset.currentPrice ? asset.quantity * asset.currentPrice : 0;
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            let detail = `- ${asset.symbol} (${getAssetTypeName(asset.type)}): Miktar=${formatNumber(asset.quantity)}`;
+                            if (asset.currentPrice) {
+                                detail += `, Güncel Fiyat=${formatCurrency(asset.currentPrice)}`;
+                                detail += `, Toplam Değer=${formatCurrency(value)}`;
+                                detail += `, Portföydeki Oran=%${percentage}`;
+                            }
+                            if (asset.costPerUnit) {
+                                const totalCost = asset.quantity * asset.costPerUnit;
+                                const profitLoss = value - totalCost;
+                                const profitPercent = totalCost > 0 ? ((profitLoss / totalCost) * 100).toFixed(2) : 0;
+                                detail += `, Maliyet Fiyatı=${formatCurrency(asset.costPerUnit)}`;
+                                detail += `, Toplam Maliyet=${formatCurrency(totalCost)}`;
+                                detail += `, Kar/Zarar=${formatCurrency(profitLoss)} (%${profitPercent})`;
+                            }
+                            return detail;
+                        }).join('\n');
+
+                        return `
+=== KULLANICININ PORTFÖY BİLGİLERİ ===
+Toplam Portföy Değeri: ${formatCurrency(total)}
+Gösterim Para Birimi: ${selectedCurrency.value}
+Varlık Sayısı: ${assets.value.length}
+Tarih: ${new Date().toLocaleString('tr-TR')}
+
+Varlık Detayları:
+${assetDetails || 'Henüz varlık eklenmemiş'}
+===================================`;
+                    };
+
+                    // Send chat message to Gemini
+                    const sendChatMessage = async () => {
+                        const userMsg = chatInput.value.trim();
+                        if (!userMsg || isChatLoading.value) return;
+
+                        chatMessages.value.push({ role: 'user', content: userMsg });
+                        chatInput.value = '';
+                        isChatLoading.value = true;
+                        scrollChatToBottom();
+
+                        try {
+                            const portfolioContext = buildPortfolioContext();
+                            const systemPrompt = `Sen profesyonel bir finans danışmanısın. Kullanıcıya Türkçe yanıt ver. Aşağıda kullanıcının güncel portföy bilgileri var - bu bilgileri kullanarak kişiye özel tavsiyeler ver.
+
+${portfolioContext}
+
+Görevlerin:
+1. Kullanıcının portföyü hakkında detaylı analiz yap
+2. Hisse senedi, kripto, altın, döviz hakkında bilgi ver
+3. Yeni yatırım fırsatları ve trendler (meta) hakkında bilgi ver
+4. Risk analizi ve çeşitlendirme tavsiyeleri sun
+5. Piyasa trendleri ve sektör analizleri yap
+6. Kısa ve öz cevaplar ver, gereksiz uzatma
+7. Rakamları ve yüzdeleri kullan, somut ol
+
+ÖNEMLİ: Bu bir kişisel finans danışmanlığıdır. Genel uyarılar yerine somut, uygulanabilir tavsiyeler ver. Kullanıcının mevcut portföyüne göre önerilerde bulun.`;
+
+                            // Build conversation history for context
+                            const conversationHistory = chatMessages.value.map(msg => ({
+                                role: msg.role === 'user' ? 'user' : 'model',
+                                parts: [{ text: msg.content }]
+                            }));
+
+                            const requestBody = {
+                                system_instruction: {
+                                    parts: [{ text: systemPrompt }]
+                                },
+                                contents: conversationHistory
+                            };
+
+                            const response = await fetch(
+                                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                                {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(requestBody)
+                                }
+                            );
+
+                            if (!response.ok) {
+                                const errData = await response.json().catch(() => ({}));
+                                throw new Error(errData.error?.message || `API Hatası: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+                            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
+                            chatMessages.value.push({ role: 'ai', content: aiText });
+                        } catch (error) {
+                            console.error('Chatbot error:', error);
+                            chatMessages.value.push({ role: 'ai', content: `❌ Hata: ${error.message}` });
+                        } finally {
+                            isChatLoading.value = false;
+                            scrollChatToBottom();
+                        }
+                    };
+
+                    const scrollChatToBottom = () => {
+                        setTimeout(() => {
+                            if (chatMessagesRef.value) {
+                                chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight;
+                            }
+                        }, 50);
+                    };
+
+                    const clearChatHistory = () => {
+                        chatMessages.value = [];
+                    };
 
                     // Load settings from localStorage
                     const loadSettings = () => {
@@ -3459,7 +3923,15 @@
                         showSummaryModal,
                         generateWeeklySummary,
                         openEmailSummary,
-                        copySummaryToClipboard
+                        copySummaryToClipboard,
+                        // AI Chatbot
+                        showChatbot,
+                        chatMessages,
+                        chatInput,
+                        isChatLoading,
+                        chatMessagesRef,
+                        sendChatMessage,
+                        clearChatHistory
                     };
                 }
             }).mount('#app');
