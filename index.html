@@ -2552,12 +2552,35 @@ Görevlerin:
                     };
 
                     // Firebase Auth Logic
-                    const login = () => {
-                        const provider = new firebase.auth.GoogleAuthProvider();
-                        auth.signInWithPopup(provider);
+                    const login = async () => {
+                        logDebug('info', '🔑 Starting Google Login...');
+                        isAuthLoading.value = true;
+                        try {
+                            const provider = new firebase.auth.GoogleAuthProvider();
+                            logDebug('info', '📡 Calling signInWithPopup...');
+                            const result = await auth.signInWithPopup(provider);
+                            logDebug('success', '✅ Login success result:', {
+                                user: result.user.displayName,
+                                email: result.user.email
+                            });
+                        } catch (error) {
+                            logDebug('error', '❌ Login failed:', {
+                                code: error.code,
+                                message: error.message,
+                                detail: error
+                            });
+                            showToast(`Giriş başarısız: ${error.message}`, 'error');
+
+                            if (error.code === 'auth/unauthorized-domain') {
+                                logDebug('warn', '⚠️ AUTH ERROR: This domain is not authorized in Firebase Console > Authentication > Settings > Authorized domains');
+                            }
+                        } finally {
+                            isAuthLoading.value = false;
+                        }
                     };
 
                     const logout = () => {
+                        logDebug('info', '🚪 Logging out...');
                         auth.signOut();
                     };
 
@@ -3709,14 +3732,16 @@ Görevlerin:
 
                         // Monitor Auth State
                         auth.onAuthStateChanged(async (u) => {
+                            logDebug('info', '🔄 Auth state changed:', u ? `User: ${u.displayName}` : 'No User');
                             isAuthLoading.value = false;
                             if (u) {
                                 user.value = u;
                                 logDebug('success', `👤 Logged in as: ${u.displayName}`);
+                                showToast(`${u.displayName} olarak giriş yapıldı`, 'success');
                                 await loadFromFirebase(u.uid);
                             } else {
                                 user.value = null;
-                                logDebug('info', '👤 User logged out');
+                                logDebug('info', '👤 User session is empty');
                             }
                         });
 
