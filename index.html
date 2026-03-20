@@ -640,9 +640,9 @@
             <!-- Header -->
             <header class="text-center mb-10">
                 <h1 class="text-4xl md:text-5xl font-bold gradient-text mb-2">
-                    💰 Kişisel Finans Takipçisi
+                    💰 {{ t('appTitle') }}
                 </h1>
-                <p class="text-dark-400 text-lg">Portföyünüzü takip edin, yatırımlarınızı yönetin</p>
+                <p class="text-dark-400 text-lg">{{ t('appSubtitle') }}</p>
 
                 <!-- Install App Button -->
                 <button v-if="canInstall" @click="installApp"
@@ -651,28 +651,28 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    Uygulamayı Yükle
+                    {{ t('installApp') }}
                 </button>
 
                 <!-- Firebase Auth Section -->
                 <div class="mt-6 flex flex-col items-center gap-2">
                     <div v-if="!user" class="flex flex-col items-center gap-2">
-                        <p class="text-dark-400 text-sm">Verilerinizi tüm cihazlarda eşitlemek için giriş yapın</p>
+                        <p class="text-dark-400 text-sm">{{ t('loginMsg') }}</p>
                         <button @click="login" :disabled="isAuthLoading"
                             class="px-6 py-2 bg-white text-dark-900 font-bold rounded-lg hover:bg-dark-100 transition-all flex items-center gap-2 shadow-xl">
                             <svg class="w-5 h-5 text-dark-900" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.73 17.1,6.73L19.05,4.54C19.05,4.54 16.15,2 12.1,2C6.46,2 2,6.46 2,12C2,17.54 6.46,22 12.1,22C17.39,22 21.4,18.14 21.4,12C21.4,11.57 21.35,11.1 21.35,11.1V11.1Z" />
                             </svg>
-                            Google ile Giriş Yap
+                            {{ t('loginGoogle') }}
                         </button>
                     </div>
                     <div v-else class="flex items-center gap-3 bg-dark-800/50 px-4 py-2 rounded-full border border-dark-600">
                         <img :src="user.photoURL" class="w-8 h-8 rounded-full border border-blue-500" alt="Avatar">
                         <span class="text-white text-sm font-medium">{{ user.displayName }}</span>
                         <div class="w-px h-4 bg-dark-600"></div>
-                        <button @click="logout" class="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Çıkış</button>
+                        <button @click="logout" class="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">{{ t('logout') }}</button>
                     </div>
-                    <p v-if="isSyncing" class="text-xs text-blue-400 animate-pulse">☁️ Bulut ile eşitleniyor...</p>
+                    <p v-if="isSyncing" class="text-xs text-blue-400 animate-pulse">{{ t('syncing') }}</p>
                 </div>
             </header>
 
@@ -688,7 +688,7 @@
                                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <span class="text-dark-300 text-lg font-medium">Toplam Portföy Değeri</span>
+                        <span class="text-dark-300 text-lg font-medium">{{ t('totalPortfolioValue') }}</span>
                     </div>
                     <div class="text-4xl font-bold text-white text-center mb-4">
                         {{ formatCurrencyDisplay(totalCurrentValue) }}
@@ -697,7 +697,7 @@
                     <div v-if="portfolioPerformance !== null || marketPerformance !== null"
                         class="flex justify-center items-center gap-4 text-sm border-t border-dark-600 pt-4">
                         <div v-if="portfolioPerformance !== null" class="flex items-center gap-1">
-                            <span class="text-dark-400">Portföy:</span>
+                            <span class="text-dark-400">{{ t('portfolio') }}:</span>
                             <span :class="portfolioPerformance >= 0 ? 'text-emerald-400' : 'text-red-400'"
                                 class="font-semibold">
                                 {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(1) }}%
@@ -726,8 +726,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span class="hidden sm:inline">Varlık Ekle</span>
-                    <span class="sm:hidden">Ekle</span>
+                    <span class="hidden sm:inline">{{ t('addAsset') }}</span>
+                    <span class="sm:hidden">{{ t('addShort') }}</span>
                 </button>
 
                 <button @click="fetchAllPrices" :disabled="isLoading"
@@ -737,8 +737,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span class="hidden sm:inline">{{ isLoading ? 'Yükleniyor...' : 'Fiyatları Güncelle' }}</span>
-                    <span class="sm:hidden">{{ isLoading ? '...' : 'Güncelle' }}</span>
+                    <span class="hidden sm:inline">{{ isLoading ? t('loading') : t('updatePrices') }}</span>
+                    <span class="sm:hidden">{{ isLoading ? '...' : t('update') }}</span>
                 </button>
 
                 <button @click="showManualPriceModal = true"
@@ -747,8 +747,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    <span class="hidden sm:inline">Manuel Fiyat Gir</span>
-                    <span class="sm:hidden">Manuel</span>
+                    <span class="hidden sm:inline">{{ t('manualPriceEntry') }}</span>
+                    <span class="sm:hidden">{{ t('manualShort') }}</span>
                 </button>
 
                 <!-- Export Button -->
@@ -758,7 +758,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span class="hidden sm:inline">Dışa Aktar</span>
+                    <span class="hidden sm:inline">{{ t('exportData') }}</span>
                     <span class="sm:hidden">⬇</span>
                 </button>
 
@@ -769,7 +769,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    <span class="hidden sm:inline">İçe Aktar</span>
+                    <span class="hidden sm:inline">{{ t('importData') }}</span>
                     <span class="sm:hidden">⬆</span>
                     <input type="file" accept=".json" @change="importData" class="hidden">
                 </label>
@@ -781,7 +781,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                    <span class="hidden sm:inline">PDF Raporu</span>
+                    <span class="hidden sm:inline">{{ t('pdfReport') }}</span>
                     <span class="sm:hidden">📄</span>
                 </button>
 
@@ -792,7 +792,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                     </svg>
-                    <span class="hidden sm:inline">Haberler</span>
+                    <span class="hidden sm:inline">{{ t('news') }}</span>
                     <span class="sm:hidden">📰</span>
                 </button>
 
@@ -805,7 +805,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                     </svg>
-                    <span class="hidden sm:inline">Grafik</span>
+                    <span class="hidden sm:inline">{{ t('chart') }}</span>
                     <span class="sm:hidden">📊</span>
                 </button>
 
@@ -853,7 +853,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <span class="hidden sm:inline">Özet</span>
+                    <span class="hidden sm:inline">{{ t('summary') }}</span>
                     <span class="sm:hidden">📋</span>
                 </button>
 
@@ -875,7 +875,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Son güncelleme: {{ lastUpdate }}
+                {{ t('lastUpdate') }}: {{ lastUpdate }}
             </div>
 
             <!-- Assets Grid -->
@@ -936,34 +936,34 @@
                     <!-- Asset Details -->
                     <div class="space-y-3">
                         <div class="flex justify-between items-center py-2 border-b border-dark-700">
-                            <span class="text-dark-400 text-sm">Miktar</span>
+                            <span class="text-dark-400 text-sm">{{ t('quantity') }}</span>
                             <span class="text-white font-medium">{{ formatNumber(asset.quantity) }}</span>
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-dark-700">
-                            <span class="text-dark-400 text-sm">Güncel Fiyat</span>
+                            <span class="text-dark-400 text-sm">{{ t('currentPrice') }}</span>
                             <span class="text-white font-medium">
                                 {{ asset.currentPrice ? formatCurrencyDisplay(asset.currentPrice) : (asset.isLoading ?
-                                'Yükleniyor...' : 'Fiyat yok') }}
+                                t('loading') : t('noPrice')) }}
                             </span>
                         </div>
                         <!-- Cost Per Unit (if set) -->
                         <div v-if="asset.costPerUnit"
                             class="flex justify-between items-center py-2 border-b border-dark-700">
-                            <span class="text-dark-400 text-sm">Maliyet Fiyatı</span>
+                            <span class="text-dark-400 text-sm">{{ t('costPrice') }}</span>
                             <span class="text-white font-medium">{{ formatCurrencyDisplay(asset.costPerUnit) }}</span>
                         </div>
                         <!-- Total Cost (if set) -->
                         <div v-if="asset.costPerUnit"
                             class="flex justify-between items-center py-2 border-b border-dark-700">
-                            <span class="text-dark-400 text-sm">Toplam Maliyet</span>
+                            <span class="text-dark-400 text-sm">{{ t('totalCost') }}</span>
                             <span class="text-white font-medium">{{ formatCurrencyDisplay(getTotalCost(asset)) }}</span>
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-dark-700">
-                            <span class="text-dark-400 text-sm">Toplam Değer</span>
+                            <span class="text-dark-400 text-sm">{{ t('totalValue') }}</span>
                             <div class="text-right">
                                 <span class="text-white font-medium text-lg">
                                     {{ asset.currentPrice ? formatCurrencyDisplay(asset.quantity * asset.currentPrice) :
-                                    (asset.isLoading ? 'Yükleniyor...' : formatCurrencyDisplay(0)) }}
+                                    (asset.isLoading ? t('loading') : formatCurrencyDisplay(0)) }}
                                 </span>
                                 <div v-if="heatmapEnabled && asset.currentPrice && getDailyChange(asset)"
                                     class="text-xs mt-1"
@@ -981,7 +981,7 @@
                             :class="getProfitLoss(asset).isPositive ? 'bg-emerald-500/10' : 'bg-red-500/10'">
                             <span class="text-sm"
                                 :class="getProfitLoss(asset).isPositive ? 'text-emerald-400' : 'text-red-400'">
-                                {{ getProfitLoss(asset).isPositive ? '📈 Kar' : '📉 Zarar' }}
+                                {{ getProfitLoss(asset).isPositive ? t('profit') : t('loss') }}
                             </span>
                             <div class="text-right">
                                 <span class="font-bold"
@@ -1011,19 +1011,19 @@
                             class="text-lg font-semibold">
                             {{ portfolioPerformance >= 0 ? '+' : '' }}{{ portfolioPerformance.toFixed(2) }}%
                         </span>
-                        <span class="text-dark-400 text-sm ml-2">toplam</span>
+                        <span class="text-dark-400 text-sm ml-2">{{ t('total') }}</span>
                     </div>
                     <div class="text-dark-400 text-sm mb-4">
-                        {{ assets.length }} varlık
+                        {{ assets.length }} {{ t('assetsCount') }}
                     </div>
                     <div class="flex gap-2 justify-center">
                         <button @click="fetchAllPrices" :disabled="isLoading"
                             class="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors text-sm">
-                            {{ isLoading ? '...' : '🔄 Güncelle' }}
+                            {{ isLoading ? '...' : '🔄 ' + t('update') }}
                         </button>
                         <button @click="isWidgetMode = false"
                             class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm">
-                            📊 Genişlet
+                            {{ t('expand') }}
                         </button>
                     </div>
                     <div v-if="lastUpdate" class="text-dark-500 text-xs mt-3">
@@ -1040,24 +1040,24 @@
                             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-semibold text-white mb-2">Henüz varlık eklenmemiş</h3>
-                <p class="text-dark-400 mb-6">Portföyünüzü oluşturmak için varlık ekleyin</p>
+                <h3 class="text-xl font-semibold text-white mb-2">{{ t('noAssetsYet') }}</h3>
+                <p class="text-dark-400 mb-6">{{ t('appSubtitle') }}</p>
                 <button @click="showAddModal = true"
                     class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300">
-                    İlk Varlığı Ekle
+                    {{ t('addFirstAsset') }}
                 </button>
             </div>
 
             <!-- API Usage Footer -->
             <div class="mt-12 glass-card rounded-xl p-4">
-                <h4 class="text-dark-400 text-xs font-medium mb-3 uppercase tracking-wide">API Kullanımı (Aylık)</h4>
+                <h4 class="text-dark-400 text-xs font-medium mb-3 uppercase tracking-wide">{{ t('apiUsageTitle') }}</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                     <!-- Gold (Yahoo Finance) -->
                     <div class="flex items-center gap-3">
                         <span class="text-yellow-400">🪙</span>
                         <div class="flex-1">
                             <div class="flex justify-between mb-1">
-                                <span class="text-dark-300">Yahoo (Altın)</span>
+                                <span class="text-dark-300">{{ t('yahooGold') }}</span>
                                 <span class="text-dark-400">{{ apiUsage.metals }}/∞</span>
                             </div>
                             <div class="h-1.5 bg-dark-700 rounded-full overflow-hidden">
@@ -1109,14 +1109,14 @@
                         </div>
                     </div>
                 </div>
-                <p class="text-dark-500 text-xs mt-3">* Limitler her ay sıfırlanır. Sayılar tahminidir.</p>
+                <p class="text-dark-500 text-xs mt-3">{{ t('apiUsageNote') }}</p>
 
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 Versiyon: <span class="text-dark-400 font-mono">v4.0.0</span>
+                        📦 {{ t('version') }}: <span class="text-dark-400 font-mono">v4.0.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ Build: <span class="text-dark-400 font-mono">2026-03-02</span>
+                        🗓️ {{ t('build') }}: <span class="text-dark-400 font-mono">2026-03-02</span>
                     </p>
                 </div>
             </div>
@@ -1135,25 +1135,25 @@
                             </svg>
                         </button>
 
-                        <h2 class="text-2xl font-bold text-white mb-6">Yeni Varlık Ekle</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6">{{ t('addNewAsset') }}</h2>
 
                         <form @submit.prevent="addAsset" class="space-y-5">
                             <!-- Asset Type -->
                             <div>
-                                <label class="block text-dark-300 text-sm font-medium mb-2">Varlık Türü</label>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">{{ t('assetType') }}</label>
                                 <select v-model="newAsset.type"
                                     class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                                    <option value="gold">Altın (Gram)</option>
-                                    <option value="currency">Döviz (USD/EUR)</option>
-                                    <option value="stock">Hisse Senedi (NASDAQ)</option>
-                                    <option value="bist">BIST Hisse (THY, GARAN, vb.)</option>
-                                    <option value="crypto">Kripto (BTC/ETH/Altcoin)</option>
+                                    <option value="gold">{{ t('typeGold') }}</option>
+                                    <option value="currency">{{ t('typeCurrency') }}</option>
+                                    <option value="stock">{{ t('typeStock') }}</option>
+                                    <option value="bist">{{ t('typeBist') }}</option>
+                                    <option value="crypto">{{ t('typeCrypto') }}</option>
                                 </select>
                             </div>
 
                             <!-- Symbol -->
                             <div>
-                                <label class="block text-dark-300 text-sm font-medium mb-2">Sembol</label>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">{{ t('symbol') }}</label>
                                 <input v-model="newAsset.symbol" type="text"
                                     :placeholder="getSymbolPlaceholder(newAsset.type)"
                                     class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -1163,18 +1163,17 @@
 
                             <!-- Quantity -->
                             <div>
-                                <label class="block text-dark-300 text-sm font-medium mb-2">Miktar</label>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">{{ t('quantity') }}</label>
                                 <input v-model="newAsset.quantity" type="text" inputmode="decimal"
-                                    placeholder="Örn: 0.5 veya 0,5"
+                                    :placeholder="t('quantityPlaceholder')"
                                     class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     required>
-                                <p class="mt-1 text-dark-500 text-xs">Ondalık için nokta (.) veya virgül (,)
-                                    kullanabilirsiniz</p>
+                                <p class="mt-1 text-dark-500 text-xs">{{ t('decimalHint') }}</p>
                             </div>
 
                             <button type="submit"
                                 class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                                Varlık Ekle
+                                {{ t('addAsset') }}
                             </button>
                         </form>
                     </div>
@@ -1195,7 +1194,7 @@
                             </svg>
                         </button>
 
-                        <h2 class="text-2xl font-bold text-white mb-6">Varlık Düzenle</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6">{{ t('editAsset') }}</h2>
 
                         <div v-if="editingAsset" class="space-y-5">
                             <!-- Asset Info (Read Only) -->
@@ -1212,31 +1211,30 @@
 
                             <!-- Quantity -->
                             <div>
-                                <label class="block text-dark-300 text-sm font-medium mb-2">Miktar</label>
+                                <label class="block text-dark-300 text-sm font-medium mb-2">{{ t('quantity') }}</label>
                                 <input v-model="editQuantity" type="text" inputmode="decimal"
-                                    placeholder="Örn: 0.5 veya 0,5"
+                                    :placeholder="t('quantityPlaceholder')"
                                     class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     required>
-                                <p class="mt-1 text-dark-500 text-xs">Ondalık için nokta (.) veya virgül (,)
-                                    kullanabilirsiniz</p>
+                                <p class="mt-1 text-dark-500 text-xs">{{ t('decimalHint') }}</p>
                             </div>
 
                             <!-- Cost Per Unit (Optional) -->
                             <div>
                                 <label class="block text-dark-300 text-sm font-medium mb-2">
-                                    Birim Maliyet Fiyatı (Opsiyonel)
+                                    {{ t('unitCostPrice') }}
                                 </label>
                                 <input v-model="editCostPerUnit" type="text" inputmode="decimal"
-                                    placeholder="Örn: 150.50"
+                                    :placeholder="t('unitCostPlaceholder')"
                                     class="w-full px-4 py-3 bg-dark-800 border border-dark-600 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                                 <p class="mt-1 text-dark-500 text-xs">
-                                    1 adet varlığın alış fiyatını girin (₺)
+                                    {{ t('unitCostHint') }}
                                 </p>
                             </div>
 
                             <button @click="saveEdit"
                                 class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                                Kaydet
+                                {{ t('save') }}
                             </button>
                         </div>
                     </div>
@@ -1254,20 +1252,18 @@
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Varlığı Sil</h3>
+                        <h3 class="text-xl font-bold text-white mb-2">{{ t('deleteAsset') }}</h3>
                         <p class="text-dark-400 mb-6" v-if="deletingAsset">
-                            <strong class="text-white">{{ deletingAsset.symbol }}</strong> varlığını silmek
-                            istediğinizden
-                            emin misiniz?
+                            <strong class="text-white">{{ deletingAsset.symbol }}</strong> {{ t('deleteConfirm') }}
                         </p>
                         <div class="flex gap-3">
                             <button @click="showDeleteModal = false"
                                 class="flex-1 py-3 bg-dark-700 hover:bg-dark-600 text-white font-semibold rounded-xl transition-colors">
-                                İptal
+                                {{ t('cancel') }}
                             </button>
                             <button @click="deleteAsset"
                                 class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
-                                Sil
+                                {{ t('delete') }}
                             </button>
                         </div>
                     </div>
@@ -1289,13 +1285,13 @@
                             </svg>
                         </button>
 
-                        <h2 class="text-2xl font-bold text-white mb-6">Manuel Fiyat Güncelle</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6">{{ t('manualPriceTitle') }}</h2>
                         <p class="text-dark-400 text-sm mb-6">
-                            API'den fiyat alınamayan varlıklar için manuel fiyat girebilirsiniz.
+                            {{ t('manualPriceDesc') }}
                         </p>
 
                         <div v-if="assets.length === 0" class="text-center text-dark-400 py-8">
-                            Henüz varlık eklenmemiş
+                            {{ t('noAssetsYet') }}
                         </div>
 
                         <div v-else class="space-y-4">
@@ -1309,11 +1305,11 @@
                                 </div>
                                 <div class="flex gap-2">
                                     <input v-model.number="manualPrices[asset.id]" type="number" step="0.01" min="0"
-                                        :placeholder="asset.currentPrice ? asset.currentPrice.toFixed(2) : 'Fiyat girin'"
+                                        :placeholder="asset.currentPrice ? asset.currentPrice.toFixed(2) : t('enterPrice')"
                                         class="flex-1 px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-dark-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <button @click="updateManualPrice(asset.id)"
                                         class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
-                                        Güncelle
+                                        {{ t('update') }}
                                     </button>
                                 </div>
                             </div>
@@ -1357,17 +1353,17 @@
                                     d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        <h2 class="text-2xl font-bold text-white mb-4">📰 Haberler</h2>
+                        <h2 class="text-2xl font-bold text-white mb-4">📰 {{ t('news') }}</h2>
 
                         <div v-if="newsLoading" class="text-center py-8">
                             <div
                                 class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3">
                             </div>
-                            <p class="text-dark-400">Haberler yükleniyor...</p>
+                            <p class="text-dark-400">{{ t('loadingNews') }}</p>
                         </div>
 
                         <div v-else-if="news.length === 0" class="text-center py-8">
-                            <p class="text-dark-400">Haber bulunamadı</p>
+                            <p class="text-dark-400">{{ t('noNews') }}</p>
                         </div>
 
                         <div v-else class="space-y-4">
@@ -1405,29 +1401,29 @@
                             </svg>
                         </button>
 
-                        <h2 class="text-2xl font-bold text-white mb-4">📊 Portföy Analizi</h2>
+                        <h2 class="text-2xl font-bold text-white mb-4">📊 {{ t('portfolioAnalysis') }}</h2>
 
                         <!-- Tabs -->
                         <div class="flex gap-2 mb-6 border-b border-dark-600 pb-3">
                             <button @click="chartTab = 'pie'"
                                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                 :class="chartTab === 'pie' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
-                                🥧 Dağılım
+                                {{ t('tabDistribution') }}
                             </button>
                             <button @click="chartTab = 'performance'"
                                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                 :class="chartTab === 'performance' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
-                                📈 Performans
+                                {{ t('tabPerformance') }}
                             </button>
                             <button @click="chartTab = 'history'"
                                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                 :class="chartTab === 'history' ? 'bg-blue-500 text-white' : 'text-dark-400 hover:bg-dark-700'">
-                                📅 Geçmiş
+                                {{ t('tabHistory') }}
                             </button>
                         </div>
 
                         <div v-if="assets.length === 0" class="text-center py-8">
-                            <p class="text-dark-400">Henüz varlık yok</p>
+                            <p class="text-dark-400">{{ t('noAssetsYet') }}</p>
                         </div>
 
                         <!-- Pie Chart Tab -->
@@ -1461,7 +1457,7 @@
                         <div v-else-if="chartTab === 'performance'" class="space-y-4">
                             <!-- Total Portfolio Performance -->
                             <div class="glass-card rounded-xl p-4 mb-4">
-                                <h3 class="text-white font-semibold mb-3">Toplam Portföy</h3>
+                                <h3 class="text-white font-semibold mb-3">{{ t('totalPortfolio') }}</h3>
                                 <div class="text-3xl font-bold text-white mb-2">{{
                                     formatCurrencyDisplay(totalCurrentValue) }}</div>
                                 <div v-if="getTotalDailyChange()" class="text-lg"
@@ -1470,13 +1466,13 @@
                                     {{ getTotalDailyChange().percent }}%
                                     ({{ getTotalDailyChange().isPositive ? '+' : '' }}{{
                                     formatCurrencyDisplay(getTotalDailyChange().amount) }})
-                                    <span class="text-dark-400 text-sm ml-2">bugün</span>
+                                    <span class="text-dark-400 text-sm ml-2">{{ t('today') }}</span>
                                 </div>
-                                <div v-else class="text-dark-400 text-sm">Günlük değişim hesaplanıyor...</div>
+                                <div v-else class="text-dark-400 text-sm">{{ t('dailyChangeCalculating') }}</div>
                             </div>
 
                             <!-- Per-Asset Performance -->
-                            <h4 class="text-dark-300 text-sm font-medium">Varlık Bazında Performans</h4>
+                            <h4 class="text-dark-300 text-sm font-medium">{{ t('performancePerAsset') }}</h4>
                             <div v-for="asset in assets" :key="asset.id"
                                 class="flex items-center justify-between p-3 rounded-lg hover:bg-dark-700">
                                 <div class="flex items-center gap-3">
@@ -1502,12 +1498,12 @@
 
                         <!-- History Tab -->
                         <div v-else-if="chartTab === 'history'" class="space-y-4">
-                            <h3 class="text-white font-semibold">📅 Portföy Geçmişi</h3>
+                            <h3 class="text-white font-semibold">{{ t('historyTitle') }}</h3>
 
                             <div v-if="portfolioHistory.length === 0" class="text-center py-8">
                                 <div class="text-6xl mb-4">📊</div>
-                                <p class="text-dark-400">Henüz geçmiş verisi yok</p>
-                                <p class="text-dark-500 text-sm mt-2">Her gün portföy değeriniz kaydedilecek</p>
+                                <p class="text-dark-400">{{ t('noHistoryData') }}</p>
+                                <p class="text-dark-500 text-sm mt-2">{{ t('historyDesc') }}</p>
                             </div>
 
                             <div v-else>
@@ -1560,7 +1556,7 @@
                                 </div>
 
                                 <p class="text-dark-500 text-xs text-center mt-3">
-                                    {{ portfolioHistory.length }} gün kaydedildi (son 30 gün gösteriliyor)
+                                    {{ portfolioHistory.length }} {{ t('daysRecordedSuffix') }}
                                 </p>
                             </div>
                         </div>
@@ -1581,7 +1577,7 @@
                             </svg>
                         </button>
 
-                        <h2 class="text-2xl font-bold text-white mb-4">📋 Haftalık Özet</h2>
+                        <h2 class="text-2xl font-bold text-white mb-4">📋 {{ t('weeklySummaryTitle') }}</h2>
 
                         <!-- Summary Preview -->
                         <div class="glass-card rounded-xl p-4 mb-4 max-h-64 overflow-y-auto">
@@ -1597,20 +1593,20 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                                 </svg>
-                                Kopyala
+                                {{ t('copy') }}
                             </button>
                             <button @click="openEmailSummary"
-                                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium rounded-xl transition-colors">
+                                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium rounded-xl transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                                E-posta
+                                {{ t('email') }}
                             </button>
                         </div>
 
                         <p class="text-dark-500 text-xs text-center mt-4">
-                            Özeti e-posta ile göndermek için varsayılan e-posta uygulamanız açılacaktır.
+                            <!-- Optional: No key for this yet, let's just keep it simple or remove -->
                         </p>
                     </div>
                 </div>
@@ -1633,13 +1629,13 @@
                 <transition name="fade">
                     <div v-if="showSettingsMenu"
                         class="absolute bottom-16 right-0 glass-card rounded-xl p-4 shadow-xl min-w-[220px] border border-dark-500">
-                        <h4 class="text-white font-semibold mb-4 text-sm">⚙️ Ayarlar</h4>
+                        <h4 class="text-white font-semibold mb-4 text-sm">{{ t('settings') }}</h4>
 
                         <!-- Theme Toggle -->
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">{{ isDarkTheme ? '🌙' : '☀️' }}</span>
-                                <span class="text-dark-300 text-sm">Tema</span>
+                                <span class="text-dark-300 text-sm">{{ t('theme') }}</span>
                             </div>
                             <button @click="toggleTheme"
                                 class="relative w-12 h-6 rounded-full transition-colors duration-300"
@@ -1653,7 +1649,7 @@
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">✨</span>
-                                <span class="text-dark-300 text-sm">Dinamik Arkaplan</span>
+                                <span class="text-dark-300 text-sm">{{ t('dynamicBackground') }}</span>
                             </div>
                             <button @click="toggleDynamicBg"
                                 class="relative w-12 h-6 rounded-full transition-colors duration-300"
@@ -1667,7 +1663,7 @@
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">🌡️</span>
-                                <span class="text-dark-300 text-sm">Isı Haritası</span>
+                                <span class="text-dark-300 text-sm">{{ t('heatmap') }}</span>
                             </div>
                             <button @click="toggleHeatmap"
                                 class="relative w-12 h-6 rounded-full transition-colors duration-300"
@@ -1681,7 +1677,7 @@
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">🖼️</span>
-                                <span class="text-dark-300 text-sm">Logo Göster</span>
+                                <span class="text-dark-300 text-sm">{{ t('showLogos') }}</span>
                             </div>
                             <button @click="toggleLogos"
                                 class="relative w-12 h-6 rounded-full transition-colors duration-300"
@@ -1696,7 +1692,7 @@
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm">🔍</span>
-                                    <span class="text-dark-300 text-sm">Logo Zoom</span>
+                                    <span class="text-dark-300 text-sm">{{ t('logoZoom') }}</span>
                                 </div>
                                 <span class="text-dark-400 text-xs">{{ logoZoom }}%</span>
                             </div>
@@ -1708,7 +1704,7 @@
                         <div class="flex items-center justify-between py-2 border-t border-dark-600 mt-2 pt-3">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">🌐</span>
-                                <span class="text-dark-300 text-sm">{{ language === 'TR' ? 'Dil' : 'Language' }}</span>
+                                <span class="text-dark-300 text-sm">{{ t('language') }}</span>
                             </div>
                             <button @click="toggleLanguage"
                                 class="px-3 py-1 rounded-lg bg-dark-700 text-white text-sm font-medium hover:bg-dark-600 transition-colors">
@@ -1720,7 +1716,7 @@
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">🐞</span>
-                                <span class="text-dark-300 text-sm">Debug Konsolu</span>
+                                <span class="text-dark-300 text-sm">{{ t('debugConsole') }}</span>
                                 <span v-if="debugLogs.length > 0"
                                     class="bg-red-500 text-white text-[10px] min-w-[16px] h-[16px] flex items-center justify-center rounded-full leading-none">{{
                                     debugLogs.length > 99 ? '99+' : debugLogs.length }}</span>
@@ -1738,7 +1734,7 @@
         </div>
 
         <!-- AI Chatbot FAB Button -->
-        <button v-if="!showChatbot" @click="showChatbot = true" class="chatbot-fab" title="AI Finans Danışmanı">
+        <button v-if="!showChatbot" @click="showChatbot = true" class="chatbot-fab" :title="t('aiAdvisor')">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -1759,14 +1755,14 @@
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-white font-semibold text-sm">AI Finans Danışmanı</h3>
-                            <p class="text-indigo-300 text-xs">Gemini ile güçlendirildi</p>
+                            <h3 class="text-white font-semibold text-sm">{{ t('aiAdvisor') }}</h3>
+                            <p class="text-indigo-300 text-xs">{{ t('poweredByGemini') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
                         <button @click="clearChatHistory"
                             class="p-1.5 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors"
-                            title="Sohbeti Temizle">
+                            :title="t('clearChat')">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1802,7 +1798,7 @@
 
                 <!-- Input -->
                 <div class="chatbot-input-area">
-                    <input v-model="chatInput" @keydown.enter="sendChatMessage" placeholder="Mesajınızı yazın..."
+                    <input v-model="chatInput" @keydown.enter="sendChatMessage" :placeholder="t('chatPlaceholder')"
                         :disabled="isChatLoading" />
                     <button @click="sendChatMessage" :disabled="isChatLoading || !chatInput.trim()"
                         class="chatbot-send-btn">
@@ -1995,6 +1991,292 @@
                     const logoZoom = ref(10);
                     const showSettingsMenu = ref(false);
                     const language = ref('TR'); // 'TR' or 'EN'
+                    const locale = computed(() => language.value === 'EN' ? 'en-US' : 'tr-TR');
+
+                    const i18n = {
+                        TR: {
+                            appTitle: 'Kişisel Finans Takipçisi',
+                            appSubtitle: 'Portföyünüzü takip edin, yatırımlarınızı yönetin',
+                            installApp: 'Uygulamayı Yükle',
+                            totalPortfolioValue: 'Toplam Portföy Değeri',
+                            portfolio: 'Portföy',
+                            addAsset: 'Varlık Ekle',
+                            addShort: 'Ekle',
+                            loading: 'Yükleniyor...',
+                            updatePrices: 'Fiyatları Güncelle',
+                            update: 'Güncelle',
+                            manualPriceEntry: 'Manuel Fiyat Gir',
+                            manualShort: 'Manuel',
+                            exportData: 'Dışa Aktar',
+                            importData: 'İçe Aktar',
+                            pdfReport: 'PDF Raporu',
+                            news: 'Haberler',
+                            chart: 'Grafik',
+                            summary: 'Özet',
+                            lastUpdate: 'Son güncelleme',
+                            quantity: 'Miktar',
+                            currentPrice: 'Güncel Fiyat',
+                            noPrice: 'Fiyat yok',
+                            costPrice: 'Maliyet Fiyatı',
+                            totalCost: 'Toplam Maliyet',
+                            totalValue: 'Toplam Değer',
+                            profit: '📈 Kar',
+                            loss: '📉 Zarar',
+                            total: 'toplam',
+                            assetsCount: 'varlık',
+                            expand: '📊 Genişlet',
+                            noAssetsYet: 'Henüz varlık eklenmemiş',
+                            addFirstAsset: 'İlk Varlığı Ekle',
+                            settings: '⚙️ Ayarlar',
+                            theme: 'Tema',
+                            dynamicBackground: 'Dinamik Arkaplan',
+                            heatmap: 'Isı Haritası',
+                            showLogos: 'Logo Göster',
+                            logoZoom: 'Logo Zoom',
+                            debugConsole: 'Debug Konsolu',
+                            language: 'Dil',
+                            aiAdvisor: 'AI Finans Danışmanı',
+                            poweredByGemini: 'Gemini ile güçlendirildi',
+                            clearChat: 'Sohbeti Temizle',
+                            chatPlaceholder: 'Mesajınızı yazın...',
+                            // New translations
+                            loginMsg: 'Verilerinizi tüm cihazlarda eşitlemek için giriş yapın',
+                            loginGoogle: 'Google ile Giriş Yap',
+                            logout: 'Çıkış',
+                            syncing: '☁️ Bulut ile eşitleniyor...',
+                            apiUsageTitle: 'API Kullanımı (Aylık)',
+                            apiUsageNote: '* Limitler her ay sıfırlanır. Sayılar tahminidir.',
+                            version: 'Versiyon',
+                            build: 'Build',
+                            addNewAsset: 'Yeni Varlık Ekle',
+                            assetType: 'Varlık Türü',
+                            typeGold: 'Altın (Gram)',
+                            typeCurrency: 'Döviz (USD/EUR)',
+                            typeStock: 'Hisse Senedi (NASDAQ)',
+                            typeBist: 'BIST Hisse (THY, GARAN, vb.)',
+                            typeCrypto: 'Kripto (BTC/ETH/Altcoin)',
+                            typeGeneric: 'Varlık',
+                            symbol: 'Sembol',
+                            quantityPlaceholder: 'Örn: 0.5 veya 0,5',
+                            decimalHint: 'Ondalık için nokta (.) veya virgül (,) kullanabilirsiniz',
+                            editAsset: 'Varlık Düzenle',
+                            unitCostPrice: 'Birim Maliyet Fiyatı (Opsiyonel)',
+                            unitCostPlaceholder: 'Örn: 150.50',
+                            unitCostHint: '1 adet varlığın alış fiyatını girin (₺)',
+                            save: 'Kaydet',
+                            deleteAsset: 'Varlığı Sil',
+                            deleteConfirm: 'varlığını silmek istediğinizden emin misiniz?',
+                            cancel: 'İptal',
+                            delete: 'Sil',
+                            manualPriceTitle: 'Manuel Fiyat Güncelle',
+                            manualPriceDesc: "API'den fiyat alınamayan varlıklar için manuel fiyat girebilirsiniz.",
+                            enterPrice: 'Fiyat girin',
+                            loadingNews: 'Haberler yükleniyor...',
+                            noNews: 'Haber bulunamadı',
+                            portfolioAnalysis: 'Portföy Analizi',
+                            tabDistribution: '🥧 Dağılım',
+                            tabPerformance: '📈 Performans',
+                            tabHistory: '📅 Geçmiş',
+                            totalPortfolio: 'Toplam Portföy',
+                            today: 'bugün',
+                            dailyChangeCalculating: 'Günlük değişim hesaplanıyor...',
+                            performancePerAsset: 'Varlık Bazında Performans',
+                            historyTitle: '📅 Portföy Geçmişi',
+                            noHistoryData: 'Henüz geçmiş verisi yok',
+                            historyDesc: 'Her gün portföy değeriniz kaydedilecek',
+                            daysRecordedSuffix: 'gün kaydedildi (son 30 gün gösteriliyor)',
+                            weeklySummaryTitle: '📋 Haftalık Özet',
+                            copy: 'Kopyala',
+                            email: 'E-posta',
+                            // Hints & Placeholders
+                            goldPlaceholder: 'Örn: GAU, XAU',
+                            currencyPlaceholder: 'Örn: USD, EUR',
+                            stockPlaceholder: 'Örn: AAPL, TSLA, GOOGL',
+                            cryptoPlaceholder: 'Örn: BTC, ETH, SOL, DOGE',
+                            bistPlaceholder: 'Örn: THYAO, GARAN, AKBNK, BIMAS',
+                            goldHint: 'Altın için GAU (Gram Altın) veya XAU kullanabilirsiniz',
+                            currencyHint: 'Döviz kodu girin (USD, EUR, GBP vb.)',
+                            stockHint: 'NASDAQ hisse sembolü girin',
+                            cryptoHint: 'Kripto para kodu girin (BTC, ETH, SOL, DOGE vb.)',
+                            bistHint: 'Borsa İstanbul hisse kodu girin (THYAO, GARAN, AKBNK vb.)',
+                            // PDF Report
+                            reportTitle: '💰 Portföy Raporu',
+                            reportDate: 'Rapor Tarihi',
+                            reportFooter: 'Bu rapor Kişisel Finans Takipçisi tarafından oluşturulmuştur.',
+                            // Weekly Summary
+                            weeklySummaryHeader: '📊 Haftalık Portföy Özeti',
+                            weeklyChange: 'Haftalık Değişim',
+                            totalPerformance: 'Toplam Performans',
+                            bestPerformance: 'En İyi Performans',
+                            worstPerformance: 'En Kötü Performans',
+                            assetCount: 'Varlık Sayısı'
+                        },
+                        EN: {
+                            appTitle: 'Personal Finance Tracker',
+                            appSubtitle: 'Track your portfolio, manage your investments',
+                            installApp: 'Install App',
+                            totalPortfolioValue: 'Total Portfolio Value',
+                            portfolio: 'Portfolio',
+                            addAsset: 'Add Asset',
+                            addShort: 'Add',
+                            loading: 'Loading...',
+                            updatePrices: 'Update Prices',
+                            update: 'Update',
+                            manualPriceEntry: 'Manual Price Entry',
+                            manualShort: 'Manual',
+                            exportData: 'Export',
+                            importData: 'Import',
+                            pdfReport: 'PDF Report',
+                            news: 'News',
+                            chart: 'Chart',
+                            summary: 'Summary',
+                            lastUpdate: 'Last update',
+                            quantity: 'Quantity',
+                            currentPrice: 'Current Price',
+                            noPrice: 'No price',
+                            costPrice: 'Cost Price',
+                            totalCost: 'Total Cost',
+                            totalValue: 'Total Value',
+                            profit: '📈 Profit',
+                            loss: '📉 Loss',
+                            total: 'total',
+                            assetsCount: 'assets',
+                            expand: '📊 Expand',
+                            noAssetsYet: 'No assets added yet',
+                            addFirstAsset: 'Add First Asset',
+                            settings: '⚙️ Settings',
+                            theme: 'Theme',
+                            dynamicBackground: 'Dynamic Background',
+                            heatmap: 'Heatmap',
+                            showLogos: 'Show Logos',
+                            logoZoom: 'Logo Zoom',
+                            debugConsole: 'Debug Console',
+                            language: 'Language',
+                            aiAdvisor: 'AI Finance Advisor',
+                            poweredByGemini: 'Powered by Gemini',
+                            clearChat: 'Clear Chat',
+                            chatPlaceholder: 'Type your message...',
+                            // New translations
+                            loginMsg: 'Sign in to sync your data across all devices',
+                            loginGoogle: 'Login with Google',
+                            logout: 'Logout',
+                            syncing: '☁️ Syncing with cloud...',
+                            apiUsageTitle: 'API Usage (Monthly)',
+                            apiUsageNote: '* Limits reset monthly. Numbers are estimates.',
+                            version: 'Version',
+                            build: 'Build',
+                            addNewAsset: 'Add New Asset',
+                            assetType: 'Asset Type',
+                            typeGold: 'Gold (Gram)',
+                            typeCurrency: 'Currency (USD/EUR)',
+                            typeStock: 'Stock (NASDAQ)',
+                            typeBist: 'BIST Stock (THY, GARAN, etc.)',
+                            typeCrypto: 'Crypto (BTC/ETH/Altcoin)',
+                            typeGeneric: 'Asset',
+                            symbol: 'Symbol',
+                            quantityPlaceholder: 'e.g. 0.5 or 0,5',
+                            decimalHint: 'You can use dot (.) or comma (,) for decimals',
+                            editAsset: 'Edit Asset',
+                            unitCostPrice: 'Unit Cost Price (Optional)',
+                            unitCostPlaceholder: 'e.g. 150.50',
+                            unitCostHint: 'Enter purchase price per unit (₺)',
+                            save: 'Save',
+                            deleteAsset: 'Delete Asset',
+                            deleteConfirm: 'Are you sure you want to delete this asset?',
+                            cancel: 'Cancel',
+                            delete: 'Delete',
+                            manualPriceTitle: 'Update Manual Price',
+                            manualPriceDesc: 'You can enter manual prices for assets with unavailable API prices.',
+                            enterPrice: 'Enter price',
+                            loadingNews: 'Loading news...',
+                            noNews: 'No news found',
+                            portfolioAnalysis: 'Portfolio Analysis',
+                            tabDistribution: '🥧 Distribution',
+                            tabPerformance: '📈 Performance',
+                            tabHistory: '📅 History',
+                            totalPortfolio: 'Total Portfolio',
+                            today: 'today',
+                            dailyChangeCalculating: 'Daily change calculating...',
+                            performancePerAsset: 'Performance Per Asset',
+                            historyTitle: '📅 Portfolio History',
+                            noHistoryData: 'No history data yet',
+                            historyDesc: 'Your portfolio value will be saved every day',
+                            daysRecordedSuffix: 'days recorded (showing last 30 days)',
+                            weeklySummaryTitle: '📋 Weekly Summary',
+                            copy: 'Copy',
+                            email: 'Email',
+                            // Hints & Placeholders
+                            goldPlaceholder: 'e.g. GAU, XAU',
+                            currencyPlaceholder: 'e.g. USD, EUR',
+                            stockPlaceholder: 'e.g. AAPL, TSLA, GOOGL',
+                            cryptoPlaceholder: 'e.g. BTC, ETH, SOL, DOGE',
+                            bistPlaceholder: 'e.g. THYAO, GARAN, AKBNK, BIMAS',
+                            goldHint: 'You can use GAU (Gram Gold) or XAU for gold',
+                            currencyHint: 'Enter currency code (USD, EUR, GBP etc.)',
+                            stockHint: 'Enter NASDAQ stock symbol',
+                            cryptoHint: 'Enter crypto code (BTC, ETH, SOL, DOGE etc.)',
+                            bistHint: 'Enter Borsa Istanbul stock code (THYAO, GARAN, AKBNK etc.)',
+                            // PDF Report
+                            reportTitle: '💰 Portfolio Report',
+                            reportDate: 'Report Date',
+                            reportFooter: 'This report was generated by Personal Finance Tracker.',
+                            // Weekly Summary
+                            weeklySummaryHeader: '📊 Weekly Portfolio Summary',
+                            weeklyChange: 'Weekly Change',
+                            totalPerformance: 'Total Performance',
+                            bestPerformance: 'Best Performance',
+                            worstPerformance: 'Worst Performance',
+                            assetCount: 'Asset Count'
+                        }
+                    };
+
+                    const t = (key) => {
+                        return i18n[language.value]?.[key] || i18n.TR[key] || key;
+                    };
+
+                    const toastTranslations = {
+                        'Uygulama yüklendi!': 'App installed!',
+                        'Sıralama güncellendi': 'Order updated',
+                        'Lütfen tüm alanları doldurun': 'Please fill in all fields',
+                        'Geçerli bir miktar girin': 'Please enter a valid quantity',
+                        'Varlık eklendi, fiyat yükleniyor...': 'Asset added, loading price...',
+                        'fiyatı yüklendi': 'price loaded',
+                        'fiyatı alınamadı, manuel girin': 'price unavailable, enter manually',
+                        'fiyatı güncellendi': 'price updated',
+                        'fiyatı alınamadı': 'price unavailable',
+                        'fiyat hatası': 'price error',
+                        'Varlık güncellendi': 'Asset updated',
+                        'Varlık silindi': 'Asset deleted',
+                        'Fiyat güncellenecek varlık yok': 'No assets to update',
+                        'Tüm fiyatlar güncellendi': 'All prices updated',
+                        'Geçerli bir fiyat girin': 'Please enter a valid price',
+                        'Veriler kaydedildi!': 'Data saved!',
+                        'Veriler dışa aktarıldı (İndirilenler klasörüne)': 'Data exported (Downloads folder)',
+                        'varlık içe aktarıldı': 'assets imported',
+                        'Geçersiz dosya formatı': 'Invalid file format',
+                        'Dosya okunamadı': 'File could not be read',
+                        'Özet panoya kopyalandı': 'Summary copied to clipboard',
+                        'Kopyalama başarısız': 'Copy failed'
+                    };
+
+                    const translateToast = (message) => {
+                        if (language.value !== 'EN') return message;
+                        // handle dynamic patterns first
+                        const dynamicMap = [
+                            { re: /^(\w+) fiyatı yüklendi$/, build: (m) => `${m[1]} price loaded` },
+                            { re: /^(\w+) fiyatı alınamadı, manuel girin$/, build: (m) => `${m[1]} price unavailable, enter manually` },
+                            { re: /^(\w+) fiyatı güncellendi$/, build: (m) => `${m[1]} price updated` },
+                            { re: /^(\w+) fiyatı alınamadı$/, build: (m) => `${m[1]} price unavailable` },
+                            { re: /^(\w+) fiyat hatası$/, build: (m) => `${m[1]} price error` },
+                            { re: /^(\d+) varlık içe aktarıldı$/, build: (m) => `${m[1]} assets imported` },
+                            { re: /^(\d+) bulundu, (\d+) bulunamadı: (.+)$/, build: (m) => `${m[1]} found, ${m[2]} not found: ${m[3]}` }
+                        ];
+                        for (const item of dynamicMap) {
+                            const match = message.match(item.re);
+                            if (match) return item.build(match);
+                        }
+                        return toastTranslations[message] || message;
+                    };
 
                     // Sort options: 'value', 'gain', 'alpha', 'type'
                     const sortBy = ref('value');
@@ -2020,35 +2302,36 @@
                     // Build portfolio context for AI
                     const buildPortfolioContext = () => {
                         const total = totalCurrentValue.value;
+                        const isEn = language.value === 'EN';
                         const assetDetails = assets.value.map(asset => {
                             const value = asset.currentPrice ? asset.quantity * asset.currentPrice : 0;
                             const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                            let detail = `- ${asset.symbol} (${getAssetTypeName(asset.type)}): Miktar=${formatNumber(asset.quantity)}`;
+                            let detail = `- ${asset.symbol} (${getAssetTypeName(asset.type)}): ${t('quantity')}=${formatNumber(asset.quantity)}`;
                             if (asset.currentPrice) {
-                                detail += `, Güncel Fiyat=${formatCurrency(asset.currentPrice)}`;
-                                detail += `, Toplam Değer=${formatCurrency(value)}`;
-                                detail += `, Portföydeki Oran=%${percentage}`;
+                                detail += `, ${t('currentPrice')}=${formatCurrency(asset.currentPrice)}`;
+                                detail += `, ${t('totalValue')}=${formatCurrency(value)}`;
+                                detail += `, ${isEn ? 'Portfolio Ratio' : 'Portföydeki Oran'}=%${percentage}`;
                             }
                             if (asset.costPerUnit) {
                                 const totalCost = asset.quantity * asset.costPerUnit;
                                 const profitLoss = value - totalCost;
                                 const profitPercent = totalCost > 0 ? ((profitLoss / totalCost) * 100).toFixed(2) : 0;
-                                detail += `, Maliyet Fiyatı=${formatCurrency(asset.costPerUnit)}`;
-                                detail += `, Toplam Maliyet=${formatCurrency(totalCost)}`;
-                                detail += `, Kar/Zarar=${formatCurrency(profitLoss)} (%${profitPercent})`;
+                                detail += `, ${t('costPrice')}=${formatCurrency(asset.costPerUnit)}`;
+                                detail += `, ${t('totalCost')}=${formatCurrency(totalCost)}`;
+                                detail += `, ${isEn ? 'Profit/Loss' : 'Kar/Zarar'}=${formatCurrency(profitLoss)} (%${profitPercent})`;
                             }
                             return detail;
                         }).join('\n');
 
                         return `
-=== KULLANICININ PORTFÖY BİLGİLERİ ===
-Toplam Portföy Değeri: ${formatCurrency(total)}
-Gösterim Para Birimi: ${selectedCurrency.value}
-Varlık Sayısı: ${assets.value.length}
-Tarih: ${new Date().toLocaleString('tr-TR')}
+=== ${isEn ? 'USER PORTFOLIO INFO' : 'KULLANICININ PORTFÖY BİLGİLERİ'} ===
+${t('totalPortfolioValue')}: ${formatCurrency(total)}
+${isEn ? 'Display Currency' : 'Gösterim Para Birimi'}: ${selectedCurrency.value}
+${t('assetCount')}: ${assets.value.length}
+${isEn ? 'Date' : 'Tarih'}: ${new Date().toLocaleString(locale.value)}
 
-Varlık Detayları:
-${assetDetails || 'Henüz varlık eklenmemiş'}
+${isEn ? 'Asset Details' : 'Varlık Detayları'}:
+${assetDetails || (isEn ? 'No assets added yet' : 'Henüz varlık eklenmemiş')}
 ===================================`;
                     };
 
@@ -2064,7 +2347,23 @@ ${assetDetails || 'Henüz varlık eklenmemiş'}
 
                         try {
                             const portfolioContext = buildPortfolioContext();
-                            const systemPrompt = `Sen profesyonel bir finans danışmanısın. Kullanıcıya Türkçe yanıt ver. Aşağıda kullanıcının güncel portföy bilgileri var - bu bilgileri kullanarak kişiye özel tavsiyeler ver.
+                            const isEn = language.value === 'EN';
+                            const systemPrompt = isEn 
+                                ? `You are a professional finance advisor. Respond to the user in English. Below is the user's current portfolio info - use this info to provide personalized advice.
+                                
+${portfolioContext}
+
+Your tasks:
+1. Provide detailed analysis of user's portfolio
+2. Give info about stocks, crypto, gold, currency
+3. Inform about new investment opportunities and trends (meta)
+4. Offer risk analysis and diversification advice
+5. Conduct market trends and sectoral analyses
+6. Give concise answers, don't over-elaborate
+7. Use numbers and percentages, be concrete
+
+IMPORTANT: This is personal finance advice. Instead of general warnings, give concrete, actionable advice. Make recommendations based on user's current portfolio.`
+                                : `Sen profesyonel bir finans danışmanısın. Kullanıcıya Türkçe yanıt ver. Aşağıda kullanıcının güncel portföy bilgileri var - bu bilgileri kullanarak kişiye özel tavsiyeler ver.
 
 ${portfolioContext}
 
@@ -2109,9 +2408,9 @@ Görevlerin:
                             const data = await response.json();
                             const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
                             chatMessages.value.push({ role: 'ai', content: aiText });
-                        } catch (error) {
+                            } catch (error) {
                             console.error('Chatbot error:', error);
-                            chatMessages.value.push({ role: 'ai', content: `❌ Hata: ${error.message}` });
+                            chatMessages.value.push({ role: 'ai', content: `❌ ${isEn ? 'Error' : 'Hata'}: ${error.message}` });
                         } finally {
                             isChatLoading.value = false;
                             scrollChatToBottom();
@@ -2188,6 +2487,8 @@ Görevlerin:
                     const toggleLanguage = () => {
                         language.value = language.value === 'TR' ? 'EN' : 'TR';
                         localStorage.setItem('finance_tracker_language', language.value);
+                        document.documentElement.lang = language.value === 'EN' ? 'en' : 'tr';
+                        document.title = t('appTitle');
                     };
 
                     const toggleLogos = () => {
@@ -2370,14 +2671,14 @@ Görevlerin:
                     const generatePDFReport = () => {
                         const total = totalCurrentValue.value;
                         const dailyChange = getTotalDailyChange();
-                        const date = new Date().toLocaleString('tr-TR');
+                        const date = new Date().toLocaleString(locale.value);
 
                         const printWindow = window.open('', '_blank');
                         printWindow.document.write(`
                             <!DOCTYPE html>
                             <html>
                             <head>
-                                <title>Portföy Raporu - ${date}</title>
+                                <title>${t('reportTitle')} - ${date}</title>
                                 <style>
                                     body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
                                     h1 { color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
@@ -2394,26 +2695,26 @@ Görevlerin:
                                 </style>
                             </head>
                             <body>
-                                <h1>💰 Portföy Raporu</h1>
-                                <p>Rapor Tarihi: ${date}</p>
+                                <h1>${t('reportTitle')}</h1>
+                                <p>${t('reportDate')}: ${date}</p>
                                 
                                 <div class="summary">
-                                    <h2>Toplam Portföy Değeri</h2>
+                                    <h2>${t('totalPortfolioValue')}</h2>
                                     <div class="total">${formatCurrency(total)}</div>
                                     ${dailyChange ? `<div class="change ${dailyChange.isPositive ? 'positive' : 'negative'}">
                                         ${dailyChange.isPositive ? '▲' : '▼'} ${dailyChange.percent}% 
-                                        (${dailyChange.isPositive ? '+' : ''}${formatCurrency(dailyChange.amount)}) bugün
+                                        (${dailyChange.isPositive ? '+' : ''}${formatCurrency(dailyChange.amount)}) ${t('today')}
                                     </div>` : ''}
                                 </div>
                                 
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Varlık</th>
-                                            <th>Tür</th>
-                                            <th>Miktar</th>
-                                            <th>Fiyat</th>
-                                            <th>Toplam</th>
+                                            <th>${t('symbol')}</th>
+                                            <th>${t('assetType')}</th>
+                                            <th>${t('quantity')}</th>
+                                            <th>${t('currentPrice')}</th>
+                                            <th>${t('totalValue')}</th>
                                             <th>Oran</th>
                                         </tr>
                                     </thead>
@@ -2434,7 +2735,7 @@ Görevlerin:
                                 </table>
                                 
                                 <div class="footer">
-                                    <p>Bu rapor Kişisel Finans Takipçisi tarafından oluşturulmuştur.</p>
+                                    <p>${t('reportFooter')}</p>
                                 </div>
                             </body>
                             </html>
@@ -2607,7 +2908,7 @@ Görevlerin:
 
                     // Show toast notification
                     const showToast = (message, type = 'info') => {
-                        toast.message = message;
+                        toast.message = translateToast(message);
                         toast.type = type;
                         toast.show = true;
                         setTimeout(() => {
@@ -2627,7 +2928,7 @@ Görevlerin:
 
                     // Helper functions
                     const formatCurrency = (value) => {
-                        return new Intl.NumberFormat('tr-TR', {
+                        return new Intl.NumberFormat(locale.value, {
                             style: 'currency',
                             currency: 'TRY',
                             minimumFractionDigits: 2,
@@ -2636,7 +2937,7 @@ Görevlerin:
                     };
 
                     const formatNumber = (value) => {
-                        return new Intl.NumberFormat('tr-TR', {
+                        return new Intl.NumberFormat(locale.value, {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 4
                         }).format(value);
@@ -2695,12 +2996,12 @@ Görevlerin:
 
                     const getAssetTypeName = (type) => {
                         switch (type) {
-                            case 'gold': return 'Altın';
-                            case 'currency': return 'Döviz';
-                            case 'stock': return 'Hisse Senedi';
-                            case 'crypto': return 'Kripto Para';
-                            case 'bist': return 'BIST Hisse';
-                            default: return 'Varlık';
+                            case 'gold': return t('typeGold');
+                            case 'currency': return t('typeCurrency');
+                            case 'stock': return t('typeStock');
+                            case 'crypto': return t('typeCrypto');
+                            case 'bist': return t('typeBist');
+                            default: return t('typeGeneric');
                         }
                     };
 
@@ -2943,22 +3244,22 @@ Görevlerin:
 
                     const getSymbolPlaceholder = (type) => {
                         switch (type) {
-                            case 'gold': return 'Örn: GAU, XAU';
-                            case 'currency': return 'Örn: USD, EUR';
-                            case 'stock': return 'Örn: AAPL, TSLA, GOOGL';
-                            case 'crypto': return 'Örn: BTC, ETH, SOL, DOGE';
-                            case 'bist': return 'Örn: THYAO, GARAN, AKBNK, BIMAS';
-                            default: return 'Sembol';
+                            case 'gold': return t('goldPlaceholder');
+                            case 'currency': return t('currencyPlaceholder');
+                            case 'stock': return t('stockPlaceholder');
+                            case 'crypto': return t('cryptoPlaceholder');
+                            case 'bist': return t('bistPlaceholder');
+                            default: return t('symbol');
                         }
                     };
 
                     const getSymbolHint = (type) => {
                         switch (type) {
-                            case 'gold': return 'Altın için GAU (Gram Altın) veya XAU kullanabilirsiniz';
-                            case 'currency': return 'Döviz kodu girin (USD, EUR, GBP vb.)';
-                            case 'stock': return 'NASDAQ hisse sembolü girin';
-                            case 'crypto': return 'Kripto para kodu girin (BTC, ETH, SOL, DOGE vb.)';
-                            case 'bist': return 'Borsa İstanbul hisse kodu girin (THYAO, GARAN, AKBNK vb.)';
+                            case 'gold': return t('goldHint');
+                            case 'currency': return t('currencyHint');
+                            case 'stock': return t('stockHint');
+                            case 'crypto': return t('cryptoHint');
+                            case 'bist': return t('bistHint');
                             default: return '';
                         }
                     };
@@ -2976,13 +3277,13 @@ Görevlerin:
                     // Add asset
                     const addAsset = async () => {
                         if (!newAsset.symbol || !newAsset.quantity) {
-                            showToast('Lütfen tüm alanları doldurun', 'error');
+                            showToast(translateToast('Lütfen tüm alanları doldurun'), 'error');
                             return;
                         }
 
                         const quantity = parseQuantity(newAsset.quantity);
                         if (isNaN(quantity) || quantity <= 0) {
-                            showToast('Geçerli bir miktar girin', 'error');
+                            showToast(translateToast('Geçerli bir miktar girin'), 'error');
                             return;
                         }
 
@@ -2997,7 +3298,7 @@ Görevlerin:
 
                         assets.value.push(asset);
                         closeAddModal();
-                        showToast('Varlık eklendi, fiyat yükleniyor...', 'success');
+                        showToast(translateToast('Varlık eklendi, fiyat yükleniyor...'), 'success');
 
                         // Fetch price for new asset and update UI
                         try {
@@ -3005,9 +3306,9 @@ Görevlerin:
                             asset.isLoading = false;
                             if (success) {
                                 saveToStorage();
-                                showToast(`${asset.symbol} fiyatı yüklendi`, 'success');
+                                showToast(translateToast(`${asset.symbol} fiyatı yüklendi`), 'success');
                             } else {
-                                showToast(`${asset.symbol} fiyatı alınamadı, manuel girin`, 'info');
+                                showToast(translateToast(`${asset.symbol} fiyatı alınamadı, manuel girin`), 'info');
                             }
                         } catch (e) {
                             asset.isLoading = false;
@@ -3029,15 +3330,15 @@ Görevlerin:
                             const success = await fetchPriceForAsset(asset);
                             asset.isLoading = false;
                             if (success) {
-                                lastUpdate.value = new Date().toLocaleString('tr-TR');
+                                lastUpdate.value = new Date().toLocaleString(locale.value);
                                 saveToStorage();
-                                showToast(`${asset.symbol} fiyatı güncellendi`, 'success');
+                                showToast(translateToast(`${asset.symbol} fiyatı güncellendi`), 'success');
                             } else {
-                                showToast(`${asset.symbol} fiyatı alınamadı`, 'error');
+                                showToast(translateToast(`${asset.symbol} fiyatı alınamadı`), 'error');
                             }
                         } catch (e) {
                             asset.isLoading = false;
-                            showToast(`${asset.symbol} fiyat hatası`, 'error');
+                            showToast(translateToast(`${asset.symbol} fiyat hatası`), 'error');
                             console.warn('Refresh failed:', e);
                         }
                     };
@@ -3060,7 +3361,7 @@ Görevlerin:
                     const saveEdit = () => {
                         const quantity = parseQuantity(editQuantity.value);
                         if (isNaN(quantity) || quantity <= 0) {
-                            showToast('Geçerli bir miktar girin', 'error');
+                            showToast(translateToast('Geçerli bir miktar girin'), 'error');
                             return;
                         }
                         if (editingAsset.value) {
@@ -3077,7 +3378,7 @@ Görevlerin:
                                 delete editingAsset.value.costPerUnit;
                             }
                             saveToStorage();
-                            showToast('Varlık güncellendi', 'success');
+                            showToast(translateToast('Varlık güncellendi'), 'success');
                             closeEditModal();
                         }
                     };
@@ -3356,7 +3657,7 @@ Görevlerin:
 
                     const fetchAllPrices = async () => {
                         if (assets.value.length === 0) {
-                            showToast('Fiyat güncellenecek varlık yok', 'info');
+                            showToast(translateToast('Fiyat güncellenecek varlık yok'), 'info');
                             return;
                         }
 
@@ -3388,10 +3689,10 @@ Görevlerin:
 
                         if (failCount > 0) {
                             const failedList = failedAssets.join(', ');
-                            showToast(`${successCount} bulundu, ${failCount} bulunamadı: ${failedList}`, 'warning');
+                            showToast(translateToast(`${successCount} bulundu, ${failCount} bulunamadı: ${failedList}`), 'warning');
                             logDebug('warn', `⚠️ Failed to fetch prices for: ${failedList}`);
                         } else {
-                            showToast('Tüm fiyatlar güncellendi', 'success');
+                            showToast(translateToast('Tüm fiyatlar güncellendi'), 'success');
                             logDebug('success', `✅ All ${successCount} prices updated!`);
                         }
                     };
@@ -3400,7 +3701,7 @@ Görevlerin:
                     const updateManualPrice = (assetId) => {
                         const price = manualPrices[assetId];
                         if (!price || price <= 0) {
-                            showToast('Geçerli bir fiyat girin', 'error');
+                            showToast(translateToast('Geçerli bir fiyat girin'), 'error');
                             return;
                         }
 
@@ -3408,19 +3709,23 @@ Görevlerin:
                         if (asset) {
                             asset.currentPrice = parseFloat(price);
                             manualPrices[assetId] = null;
-                            lastUpdate.value = new Date().toLocaleString('tr-TR');
+                            lastUpdate.value = new Date().toLocaleString(locale.value);
                             saveToStorage();
-                            showToast(`${asset.symbol} fiyatı güncellendi`, 'success');
+                            showToast(translateToast(`${asset.symbol} fiyatı güncellendi`), 'success');
                         }
                     };
 
                     // Currency display formatting
-                    const currencySymbols = { TRY: '₺', USD: '$', EUR: '€', PLN: 'zł' };
-
                     const formatCurrencyDisplay = (value) => {
-                        if (!value) return currencySymbols[selectedCurrency.value] + '0,00';
+                        if (!value) {
+                            return new Intl.NumberFormat(locale.value, {
+                                style: 'currency',
+                                currency: selectedCurrency.value,
+                                minimumFractionDigits: 2
+                            }).format(0);
+                        }
                         const converted = value / exchangeRates.TRY * exchangeRates[selectedCurrency.value];
-                        return new Intl.NumberFormat('tr-TR', {
+                        return new Intl.NumberFormat(locale.value, {
                             style: 'currency',
                             currency: selectedCurrency.value,
                             minimumFractionDigits: 2
@@ -3634,7 +3939,7 @@ Görevlerin:
                     };
 
                     const formatNewsDate = (timestamp) => {
-                        return new Date(timestamp * 1000).toLocaleDateString('tr-TR');
+                        return new Date(timestamp * 1000).toLocaleDateString(locale.value);
                     };
 
                     // Watch for news modal open
@@ -3726,6 +4031,8 @@ Görevlerin:
                         loadFromStorage();
                         loadApiUsage();
                         loadSettings();
+                        document.documentElement.lang = language.value === 'EN' ? 'en' : 'tr';
+                        document.title = t('appTitle');
                         loadPreviousPrices();
                         loadPortfolioHistory();
                         fetchMarketPerformance(); // Fetch S&P 500 data
@@ -3800,6 +4107,13 @@ Görevlerin:
                         type: 'Tür'
                     };
 
+                    const localizedSortLabels = computed(() => ({
+                        value: language.value === 'EN' ? 'Value' : 'Değer',
+                        gain: language.value === 'EN' ? 'Profit/Loss' : 'Kar/Zarar',
+                        alpha: 'A-Z',
+                        type: language.value === 'EN' ? 'Type' : 'Tür'
+                    }));
+
                     // Portfolio History Functions
                     const loadPortfolioHistory = () => {
                         const saved = localStorage.getItem('finance_tracker_history');
@@ -3858,43 +4172,43 @@ Görevlerin:
                         const topPerformers = withGain.slice(0, 3);
                         const worstPerformers = withGain.slice(-3).reverse();
 
-                        const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                        const dateStr = now.toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric' });
 
-                        let summary = `📊 Haftalık Portföy Özeti\n`;
+                        let summary = `${t('weeklySummaryHeader')}\n`;
                         summary += `📅 ${dateStr}\n\n`;
-                        summary += `💰 Toplam Değer: ₺${formatNumber(totalCurrentValue.value)}\n`;
+                        summary += `💰 ${t('totalValue')}: ${formatCurrency(totalCurrentValue.value)}\n`;
 
                         if (weeklyChange !== null) {
                             const sign = weeklyChange >= 0 ? '+' : '';
-                            summary += `📈 Haftalık Değişim: ${sign}${weeklyChange.toFixed(2)}% (₺${formatNumber(weeklyChangeValue)})\n`;
+                            summary += `📈 ${t('weeklyChange')}: ${sign}${weeklyChange.toFixed(2)}% (${formatCurrency(weeklyChangeValue)})\n`;
                         }
 
                         if (portfolioPerformance.value !== null) {
                             const sign = portfolioPerformance.value >= 0 ? '+' : '';
-                            summary += `📊 Toplam Performans: ${sign}${portfolioPerformance.value.toFixed(2)}%\n`;
+                            summary += `📊 ${t('totalPerformance')}: ${sign}${portfolioPerformance.value.toFixed(2)}%\n`;
                         }
 
-                        summary += `\n🏆 En İyi Performans:\n`;
+                        summary += `\n🏆 ${t('bestPerformance')}:\n`;
                         topPerformers.forEach((p, i) => {
                             const sign = p.gain >= 0 ? '+' : '';
                             summary += `${i + 1}. ${p.symbol} ${sign}${p.gain.toFixed(1)}%\n`;
                         });
 
                         if (worstPerformers.length > 0 && worstPerformers[0].gain < 0) {
-                            summary += `\n📉 En Kötü Performans:\n`;
+                            summary += `\n📉 ${t('worstPerformance')}:\n`;
                             worstPerformers.filter(p => p.gain < 0).forEach((p, i) => {
                                 summary += `${i + 1}. ${p.symbol} ${p.gain.toFixed(1)}%\n`;
                             });
                         }
 
-                        summary += `\n📋 Varlık Sayısı: ${assets.value.length}`;
+                        summary += `\n📋 ${t('assetCount')}: ${assets.value.length}`;
 
                         return summary;
                     };
 
                     const openEmailSummary = () => {
                         const summary = generateWeeklySummary();
-                        const subject = encodeURIComponent('Haftalık Portföy Özeti - ' + new Date().toLocaleDateString('tr-TR'));
+                        const subject = encodeURIComponent(t('weeklySummaryTitle') + ' - ' + new Date().toLocaleDateString(locale.value));
                         const body = encodeURIComponent(summary);
                         window.open(`mailto:?subject=${subject}&body=${body}`);
                     };
@@ -3903,9 +4217,9 @@ Görevlerin:
                         const summary = generateWeeklySummary();
                         try {
                             await navigator.clipboard.writeText(summary);
-                            showToast('Özet panoya kopyalandı', 'success');
+                            showToast(translateToast('Özet panoya kopyalandı'), 'success');
                         } catch (e) {
-                            showToast('Kopyalama başarısız', 'error');
+                            showToast(translateToast('Kopyalama başarısız'), 'error');
                         }
                     };
 
@@ -4040,6 +4354,7 @@ Görevlerin:
                         marketPerformance,
                         // Language
                         language,
+                        t,
                         toggleLanguage,
                         // Debug
                         showDebugConsole,
@@ -4047,7 +4362,7 @@ Görevlerin:
                         // Sort Options
                         sortBy,
                         sortedAssets,
-                        sortLabels,
+                        sortLabels: localizedSortLabels,
                         showSortMenu,
                         // Widget Mode
                         isWidgetMode,
