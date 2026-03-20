@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finance-tracker-v1';
+const CACHE_NAME = 'finance-tracker-v4.1.0';
 const urlsToCache = [
     './',
     './index.html',
@@ -13,9 +13,6 @@ self.addEventListener('install', (event) => {
             .then((cache) => {
                 console.log('Cache opened');
                 return cache.addAll(urlsToCache);
-            })
-            .catch((err) => {
-                console.log('Cache failed:', err);
             })
     );
     self.skipWaiting();
@@ -37,38 +34,33 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - serve from network first, fallback to cache
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests and external URLs
     if (event.request.method !== 'GET') return;
 
     const url = new URL(event.request.url);
 
-    // Don't cache API calls
+    // Don't intercept API calls or external resources
     if (url.hostname !== location.hostname) {
         return;
     }
 
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then((response) => {
-                if (response) {
-                    // Return cached version
-                    return response;
-                }
-                // Fetch from network
-                return fetch(event.request).then((response) => {
-                    // Don't cache non-success responses
-                    if (!response || response.status !== 200) {
-                        return response;
-                    }
-                    // Clone and cache
+                // If it's a valid response, cache it and return
+                if (response && response.status === 200) {
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
                     });
-                    return response;
-                });
+                }
+                return response;
+            })
+            .catch(() => {
+                // If network fails (offline), try the cache
+                return caches.match(event.request);
             })
     );
 });

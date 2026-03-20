@@ -1254,9 +1254,9 @@
                 <!-- Version Info -->
                 <div class="mt-4 pt-3 border-t border-dark-700 text-center">
                     <p class="text-dark-600 text-xs">
-                        📦 {{ t('version') }}: <span class="text-dark-400 font-mono">v4.0.0</span>
+                        📦 {{ t('version') }}: <span class="text-dark-400 font-mono">v4.1.0</span>
                         <span class="mx-2">•</span>
-                        🗓️ {{ t('build') }}: <span class="text-dark-400 font-mono">2026-03-02</span>
+                        🗓️ {{ t('build') }}: <span class="text-dark-400 font-mono">2026-03-20</span>
                     </p>
                 </div>
             </div>
@@ -4564,12 +4564,31 @@ Görevlerin:
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('./sw.js')
-                        .then((registration) => {
-                            console.log('✅ Service Worker registered:', registration.scope);
+                        .then((reg) => {
+                            console.log('✅ Service Worker registered');
+                            
+                            reg.onupdatefound = () => {
+                                const installingWorker = reg.installing;
+                                installingWorker.onstatechange = () => {
+                                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New version found!
+                                        console.log('New version found. Reloading...');
+                                        window.location.reload();
+                                    }
+                                };
+                            };
                         })
                         .catch((error) => {
                             console.log('❌ Service Worker registration failed:', error);
                         });
+                });
+
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
                 });
             }
         </script>
