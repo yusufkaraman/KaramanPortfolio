@@ -659,35 +659,35 @@
 
         /* Heatmap (Treemap) Styles */
         .heatmap-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            padding: 4px;
+            position: relative;
             background: rgba(0, 0, 0, 0.4);
             border-radius: 16px;
             overflow: hidden;
-            min-height: 450px;
+            height: 500px;
             width: 100%;
-            align-content: stretch;
+            margin-top: 1rem;
         }
 
         .heatmap-item {
+            position: absolute;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            min-width: 80px;
-            min-height: 80px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 8px;
-            padding: 12px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             color: white;
             cursor: pointer;
-            position: relative;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+        }
+
+        .heatmap-item:hover {
+            z-index: 20;
+            filter: brightness(1.1);
+            transform: scale(0.99);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
         .heatmap-item:hover {
@@ -1152,18 +1152,20 @@
                     </div>
                 </div>
 
-                <!-- Heatmap Grid -->
+                <!-- Heatmap Grid (Squarified Layout) -->
                 <div class="heatmap-container shadow-2xl">
-                    <div v-for="asset in assetsByValue" :key="asset.id"
+                    <div v-for="asset in treemapAssets" :key="asset.id"
                         class="heatmap-item"
                         :class="getHeatmapPerfClass(asset)"
-                        :style="getHeatmapItemStyle(asset)"
+                        :style="asset.rect"
                         @click="openEditModal(asset)">
-                        <span class="heatmap-symbol">{{ asset.symbol }}</span>
-                        <div v-if="getOverallGain(asset)" class="heatmap-change">
+                        <span class="heatmap-symbol" :style="{ fontSize: asset.fontSize }">{{ asset.symbol }}</span>
+                        <div v-if="getOverallGain(asset)" class="heatmap-change" :style="{ opacity: asset.showDetail ? 1 : 0 }">
                             {{ getOverallGain(asset).isPositive ? '+' : '' }}{{ getOverallGain(asset).percent }}%
                         </div>
-                        <div class="heatmap-value">{{ formatCurrencyDisplay(asset.quantity * (asset.currentPrice || 0), true) }}</div>
+                        <div class="heatmap-value" :style="{ opacity: asset.showDetail ? 0.7 : 0 }">
+                            {{ formatCurrencyDisplay(asset.quantity * (asset.currentPrice || 0), true) }}
+                        </div>
                     </div>
                 </div>
                 
@@ -3586,26 +3588,75 @@ Görevlerin:
                     };
 
                     const getHeatmapItemStyle = (asset) => {
-                        const total = totalCurrentValue.value;
-                        if (total === 0) return { flex: '1 1 100px' };
-                        
-                        const value = (asset.currentPrice || 0) * asset.quantity;
-                        const weight = (value / total) * 100;
-                        
-                        // Use flex-basis for accurate 1D treemap distribution
-                        // min-width: 0 is CRITICAL to allow accurate scaling below text width
-                        return {
-                            flex: `${weight} 1 ${weight}%`,
-                            minWidth: '60px', 
-                            minHeight: '80px',
-                            fontSize: `${Math.max(0.65, Math.min(1.3, weight / 6))}rem`
-                        };
+                        return asset.rect || {};
                     };
 
                     const assetsByValue = computed(() => {
                         return [...assets.value].sort((a, b) => 
                             ((b.currentPrice || 0) * b.quantity) - ((a.currentPrice || 0) * a.quantity)
                         );
+                    });
+
+                    // Treemap Calculation (Slice and Dice Algorithm for 2D Fill)
+                    const treemapAssets = computed(() => {
+                        const sorted = assetsByValue.value;
+                        const total = totalCurrentValue.value;
+                        if (total === 0 || sorted.length === 0) return [];
+
+                        const result = [];
+                        
+                        const calculate = (items, x, y, width, height) => {
+                            if (items.length === 0) return;
+                            
+                            if (items.length === 1) {
+                                const item = items[0];
+                                const weight = ((item.currentPrice || 0) * item.quantity / total) * 100;
+                                result.push({
+                                    ...item,
+                                    rect: {
+                                        left: x + '%',
+                                        top: y + '%',
+                                        width: width + '%',
+                                        height: height + '%',
+                                        padding: '4px'
+                                    },
+                                    fontSize: Math.max(0.6, Math.min(1.4, width * height / 150)) + 'rem',
+                                    showDetail: (width > 12 && height > 12)
+                                });
+                                return;
+                            }
+
+                            // Find split point to keep it roughly square
+                            let splitIndex = 1;
+                            let minDiff = Infinity;
+                            let currentSum = 0;
+                            const subTotal = items.reduce((s, i) => s + ((i.currentPrice || 0) * i.quantity), 0);
+                            
+                            for (let i = 0; i < items.length - 1; i++) {
+                                currentSum += (items[i].currentPrice || 0) * items[i].quantity;
+                                const diff = Math.abs((currentSum / subTotal) - 0.5);
+                                if (diff < minDiff) {
+                                    minDiff = diff;
+                                    splitIndex = i + 1;
+                                }
+                            }
+
+                            const part1 = items.slice(0, splitIndex);
+                            const part2 = items.slice(splitIndex);
+                            const part1Value = part1.reduce((s, i) => s + ((i.currentPrice || 0) * i.quantity), 0);
+                            const ratio = part1Value / subTotal;
+
+                            if (width > height) { // Split vertically
+                                calculate(part1, x, y, width * ratio, height);
+                                calculate(part2, x + (width * ratio), y, width * (1 - ratio), height);
+                            } else { // Split horizontally
+                                calculate(part1, x, y, width, height * ratio);
+                                calculate(part2, x, y + (height * ratio), width, height * (1 - ratio));
+                            }
+                        };
+
+                        calculate(sorted, 0, 0, 100, 100);
+                        return result;
                     });
 
                     const fetchPriceForAsset = async (asset) => {
@@ -4525,6 +4576,7 @@ Görevlerin:
                         getHeatmapPerfClass,
                         getHeatmapItemStyle,
                         assetsByValue,
+                        treemapAssets,
                         getOverallGain,
                         getDailyChange,
                         // Drag and Drop
