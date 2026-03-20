@@ -1160,15 +1160,15 @@
                         :style="getHeatmapItemStyle(asset)"
                         @click="openEditModal(asset)">
                         <span class="heatmap-symbol">{{ asset.symbol }}</span>
-                        <div v-if="getDailyChange(asset)" class="heatmap-change">
-                            {{ getDailyChange(asset).isPositive ? '+' : '' }}{{ getDailyChange(asset).percent }}%
+                        <div v-if="getOverallGain(asset)" class="heatmap-change">
+                            {{ getOverallGain(asset).isPositive ? '+' : '' }}{{ getOverallGain(asset).percent }}%
                         </div>
                         <div class="heatmap-value">{{ formatCurrencyDisplay(asset.quantity * (asset.currentPrice || 0), true) }}</div>
                     </div>
                 </div>
                 
                 <p class="text-center text-dark-500 text-xs">
-                    💡 {{ language === 'EN' ? 'Box size represents market weight. Color represents daily performance.' : 'Kutu boyutu portföy ağırlığını, renk ise günlük performansı temsil eder.' }}
+                    💡 {{ language === 'EN' ? 'Box size represents market weight. Color represents overall Profit/Loss.' : 'Kutu boyutu portföy ağırlığını, renk ise genel Kar/Zarar durumunu temsil eder.' }}
                 </p>
             </div>
 
@@ -3558,18 +3558,29 @@ Görevlerin:
                     };
 
                     // Fetch prices
+                    const getOverallGain = (asset) => {
+                        if (!asset.costPerUnit || !asset.currentPrice || asset.costPerUnit === 0) return null;
+                        const p = ((asset.currentPrice - asset.costPerUnit) / asset.costPerUnit) * 100;
+                        return {
+                            percent: p.toFixed(2),
+                            isPositive: p >= 0
+                        };
+                    };
+
                     const getHeatmapPerfClass = (asset) => {
-                        const change = getDailyChange(asset);
-                        if (!change) return 'bg-perf-neutral';
+                        const gain = getOverallGain(asset);
+                        if (!gain) return 'bg-perf-neutral';
                         
-                        const p = parseFloat(change.percent);
-                        if (change.isPositive) {
-                            if (p > 5) return 'bg-perf-up-3';
-                            if (p > 2) return 'bg-perf-up-2';
+                        const p = parseFloat(gain.percent);
+                        const absP = Math.abs(p);
+                        
+                        if (gain.isPositive) {
+                            if (absP > 10) return 'bg-perf-up-3';
+                            if (absP > 5) return 'bg-perf-up-2';
                             return 'bg-perf-up-1';
                         } else {
-                            if (p > 5) return 'bg-perf-down-3';
-                            if (p > 2) return 'bg-perf-down-2';
+                            if (absP > 10) return 'bg-perf-down-3';
+                            if (absP > 5) return 'bg-perf-down-2';
                             return 'bg-perf-down-1';
                         }
                     };
@@ -4504,6 +4515,7 @@ Görevlerin:
                         getHeatmapStyle,
                         getHeatmapPerfClass,
                         getHeatmapItemStyle,
+                        getOverallGain,
                         getDailyChange,
                         // Drag and Drop
                         dragIndex,
