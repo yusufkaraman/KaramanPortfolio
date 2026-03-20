@@ -703,15 +703,17 @@
         }
 
         .heatmap-change {
-            font-size: 0.8rem;
+            font-size: 0.75em;
             font-weight: 600;
-            opacity: 0.9;
+            opacity: 0.95;
+            white-space: nowrap;
         }
 
         .heatmap-value {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: 2px;
+            font-size: 0.65em;
+            opacity: 0.8;
+            margin-top: 1px;
+            white-space: nowrap;
         }
 
         /* Proportional colors (Wall Street Style) */
@@ -1160,10 +1162,10 @@
                         :style="asset.rect"
                         @click="openEditModal(asset)">
                         <span class="heatmap-symbol" :style="{ fontSize: asset.fontSize }">{{ asset.symbol }}</span>
-                        <div v-if="getOverallGain(asset)" class="heatmap-change" :style="{ opacity: asset.showDetail ? 1 : 0 }">
+                        <div v-if="getOverallGain(asset)" class="heatmap-change">
                             {{ getOverallGain(asset).isPositive ? '+' : '' }}{{ getOverallGain(asset).percent }}%
                         </div>
-                        <div class="heatmap-value" :style="{ opacity: asset.showDetail ? 0.7 : 0 }">
+                        <div class="heatmap-value">
                             {{ formatCurrencyDisplay(asset.quantity * (asset.currentPrice || 0), true) }}
                         </div>
                     </div>
@@ -3618,10 +3620,9 @@ Görevlerin:
                                         top: y + '%',
                                         width: width + '%',
                                         height: height + '%',
-                                        padding: '4px'
+                                        padding: '2px'
                                     },
-                                    fontSize: Math.max(0.6, Math.min(1.4, width * height / 150)) + 'rem',
-                                    showDetail: (width > 12 && height > 12)
+                                    fontSize: Math.max(0.65, Math.min(1.4, width * height / 140)) + 'rem'
                                 });
                                 return;
                             }
