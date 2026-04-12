@@ -1885,7 +1885,7 @@
                             </button>
                         </div>
                         <button v-if="notificationsEnabled && notificationPermission === 'granted'" 
-                                @click="sendNotification(t('testNotification'), t('portfolioValueMsg') + formatCurrencyDisplay(totalCurrentValue.value))" 
+                                @click="testNotification" 
                                 class="w-full mt-2 text-[10px] text-blue-400 hover:text-blue-300 uppercase tracking-wider font-bold text-center py-1">
                             {{ t('testNotification') }}
                         </button>
@@ -2213,6 +2213,7 @@
                             spOpenMsg: '🔔 S&P 500 Borsası açıldı! ABD piyasaları işlem görmeye başladı.',
                             spCloseMsg: '🌙 S&P 500 Borsası kapandı! ABD piyasalarında işlem günü sona erdi.',
                             portfolioValueMsg: 'Güncel portföy değeriniz: ',
+                            dailyChangeMsg: 'Günlük Değişim: ',
                             // New translations
                             loginMsg: 'Verilerinizi tüm cihazlarda eşitlemek için giriş yapın',
                             loginGoogle: 'Google ile Giriş Yap',
@@ -2347,6 +2348,18 @@
                             typeBist: 'BIST Stock (THY, GARAN, etc.)',
                             typeCrypto: 'Crypto (BTC/ETH/Altcoin)',
                             typeGeneric: 'Asset',
+                            notifications: 'Notifications',
+                            enableNotifications: 'Enable Market Notifications',
+                            notificationsEnabled: 'Notifications Active',
+                            notificationsDisabled: 'Notifications Off',
+                            notificationsBlocked: 'Notification Permission Blocked',
+                            testNotification: 'Send Test Notification',
+                            goldOpenMsg: '🪙 Advantageous hours for Gold have started! Bank spreads are at their lowest right now.',
+                            goldCloseMsg: '⌛ Gold advantageous hours have ended. Spreads may widen.',
+                            spOpenMsg: '🔔 S&P 500 Market opened! US markets have started trading.',
+                            spCloseMsg: '🌙 S&P 500 Market closed! The trading day has ended in US markets.',
+                            portfolioValueMsg: 'Your current portfolio value: ',
+                            dailyChangeMsg: 'Daily Change: ',
                             symbol: 'Symbol',
                             quantityPlaceholder: 'e.g. 0.5 or 0,5',
                             decimalHint: 'You can use dot (.) or comma (,) for decimals',
@@ -2736,24 +2749,39 @@ Görevlerin:
                         const eventKey = `${timeStr}-${now.toDateString()}`;
                         if (lastNotifiedEvent.value === eventKey) return;
 
-                        const portfolioValueStr = formatCurrencyDisplay(totalCurrentValue.value);
+                        const dailyChange = getTotalDailyChange();
+                        let changeStr = '';
+                        if (dailyChange) {
+                            changeStr = `\n${t('dailyChangeMsg')} ${dailyChange.isPositive ? '▲' : '▼'} %${dailyChange.percent}`;
+                        }
+
+                        const bodyMsg = t('portfolioValueMsg') + portfolioValueStr + changeStr;
 
                         if (timeStr === '09:00') {
-                            sendNotification(t('notifications'), t('goldOpenMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            sendNotification(t('notifications'), t('goldOpenMsg') + '\n' + bodyMsg);
                             lastNotifiedEvent.value = eventKey;
                         }
                         else if (timeStr === '16:30') {
-                            sendNotification(t('notifications'), t('spOpenMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            sendNotification(t('notifications'), t('spOpenMsg') + '\n' + bodyMsg);
                             lastNotifiedEvent.value = eventKey;
                         }
                         else if (timeStr === '17:30') {
-                            sendNotification(t('notifications'), t('goldCloseMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            sendNotification(t('notifications'), t('goldCloseMsg') + '\n' + bodyMsg);
                             lastNotifiedEvent.value = eventKey;
                         }
                         else if (timeStr === '23:00') {
-                            sendNotification(t('notifications'), t('spCloseMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            sendNotification(t('notifications'), t('spCloseMsg') + '\n' + bodyMsg);
                             lastNotifiedEvent.value = eventKey;
                         }
+                    };
+
+                    const testNotification = () => {
+                        const dailyChange = getTotalDailyChange();
+                        let changeStr = '';
+                        if (dailyChange) {
+                            changeStr = `\n${t('dailyChangeMsg')} ${dailyChange.isPositive ? '▲' : '▼'} %${dailyChange.percent}`;
+                        }
+                        sendNotification(t('testNotification'), t('portfolioValueMsg') + formatCurrencyDisplay(totalCurrentValue.value) + changeStr);
                     };
 
                     // Timer for clock monitoring
@@ -4742,6 +4770,7 @@ Görevlerin:
                         notificationsEnabled,
                         notificationPermission,
                         requestNotificationPermission,
+                        testNotification,
                         sendNotification
                     };
                 }
