@@ -1871,7 +1871,24 @@
                                 <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
                                     :class="showDebugConsole ? 'left-7' : 'left-1'"></div>
                             </button>
+                        <!-- Notifications Toggle -->
+                        <div class="flex items-center justify-between py-2 border-t border-dark-600 mt-2 pt-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🔔</span>
+                                <span class="text-dark-300 text-sm">{{ t('notifications') }}</span>
+                            </div>
+                            <button @click="requestNotificationPermission"
+                                class="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                :class="notificationsEnabled ? 'bg-blue-500' : 'bg-dark-600'">
+                                <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
+                                    :class="notificationsEnabled ? 'left-7' : 'left-1'"></div>
+                            </button>
                         </div>
+                        <button v-if="notificationsEnabled && notificationPermission === 'granted'" 
+                                @click="sendNotification(t('testNotification'), t('portfolioValueMsg') + formatCurrencyDisplay(totalCurrentValue.value))" 
+                                class="w-full mt-2 text-[10px] text-blue-400 hover:text-blue-300 uppercase tracking-wider font-bold text-center py-1">
+                            {{ t('testNotification') }}
+                        </button>
                     </div>
                 </transition>
             </div>
@@ -2094,12 +2111,13 @@
 
                     // Currency state
                     const selectedCurrency = ref('TRY');
-                    const exchangeRates = reactive({
-                        TRY: 1,
-                        USD: 1,
-                        EUR: 1,
                         PLN: 1
                     });
+
+                    // Notification State
+                    const notificationsEnabled = ref(false);
+                    const notificationPermission = ref('default');
+                    const lastNotifiedEvent = ref(''); 
 
                     // Chart colors
                     const chartColors = ['#60a5fa', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#fb923c', '#22d3ee', '#f87171'];
@@ -2183,6 +2201,18 @@
                             poweredByGemini: 'Gemini ile güçlendirildi',
                             clearChat: 'Sohbeti Temizle',
                             chatPlaceholder: 'Mesajınızı yazın...',
+                            notifications: 'Bildirimler',
+                            enableNotifications: 'Piyasa Bildirimlerini Aç',
+                            notificationsEnabled: 'Bildirimler Aktif',
+                            notificationsDisabled: 'Bildirimler Kapalı',
+                            notificationsBlocked: 'Bildirim İzni Engellendi',
+                            testNotification: 'Test Bildirimi Gönder',
+                            // Notification messages
+                            goldOpenMsg: '🪙 Altın için avantajlı saatler başladı! Banka makas aralıkları şu an en düşük seviyede.',
+                            goldCloseMsg: '⌛ Altın avantajlı saatleri sona erdi. Makas aralıkları açılabilir.',
+                            spOpenMsg: '🔔 S&P 500 Borsası açıldı! ABD piyasaları işlem görmeye başladı.',
+                            spCloseMsg: '🌙 S&P 500 Borsası kapandı! ABD piyasalarında işlem günü sona erdi.',
+                            portfolioValueMsg: 'Güncel portföy değeriniz: ',
                             // New translations
                             loginMsg: 'Verilerinizi tüm cihazlarda eşitlemek için giriş yapın',
                             loginGoogle: 'Google ile Giriş Yap',
@@ -2587,6 +2617,11 @@ Görevlerin:
                         if (savedLogoZoom !== null) logoZoom.value = parseInt(savedLogoZoom);
                         const savedLanguage = localStorage.getItem('finance_tracker_language');
                         if (savedLanguage !== null) language.value = savedLanguage;
+                        const savedNotifs = localStorage.getItem('finance_tracker_notifications');
+                        if (savedNotifs !== null) notificationsEnabled.value = savedNotifs === 'true';
+                        if (notificationsEnabled.value && 'Notification' in window) {
+                            notificationPermission.value = Notification.permission;
+                        }
                         applySettings();
                         applyLogoZoom();
                     };
@@ -2649,6 +2684,80 @@ Görevlerin:
                         applyLogoZoom();
                         localStorage.setItem('finance_tracker_logo_zoom', logoZoom.value);
                     };
+
+                    const requestNotificationPermission = async () => {
+                        if (!('Notification' in window)) {
+                            showToast('Bu tarayıcı bildirimleri desteklemiyor', 'error');
+                            return;
+                        }
+
+                        const permission = await Notification.requestPermission();
+                        notificationPermission.value = permission;
+                        
+                        if (permission === 'granted') {
+                            notificationsEnabled.value = true;
+                            localStorage.setItem('finance_tracker_notifications', 'true');
+                            showToast(t('notificationsEnabled'), 'success');
+                            // Welcome notification
+                            sendNotification(t('notificationsEnabled'), t('portfolioValueMsg') + formatCurrencyDisplay(totalCurrentValue.value));
+                        } else if (permission === 'denied') {
+                            notificationsEnabled.value = false;
+                            localStorage.setItem('finance_tracker_notifications', 'false');
+                            showToast(t('notificationsBlocked'), 'error');
+                        }
+                    };
+
+                    const sendNotification = (title, body) => {
+                        if (notificationPermission.value !== 'granted' || !notificationsEnabled.value) return;
+
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(registration => {
+                                registration.showNotification(title, {
+                                    body: body,
+                                    icon: './icon-512.png',
+                                    badge: './icon-512.png',
+                                    vibrate: [200, 100, 200],
+                                    tag: 'market-event'
+                                });
+                            });
+                        } else {
+                            new Notification(title, { body, icon: './icon-512.png' });
+                        }
+                    };
+
+                    const checkMarketEvents = () => {
+                        if (!notificationsEnabled.value || notificationPermission.value !== 'granted') return;
+
+                        const now = new Date();
+                        const hours = now.getHours();
+                        const minutes = now.getMinutes();
+                        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                        
+                        const eventKey = `${timeStr}-${now.toDateString()}`;
+                        if (lastNotifiedEvent.value === eventKey) return;
+
+                        const portfolioValueStr = formatCurrencyDisplay(totalCurrentValue.value);
+
+                        if (timeStr === '09:00') {
+                            sendNotification(t('notifications'), t('goldOpenMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            lastNotifiedEvent.value = eventKey;
+                        }
+                        else if (timeStr === '16:30') {
+                            sendNotification(t('notifications'), t('spOpenMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            lastNotifiedEvent.value = eventKey;
+                        }
+                        else if (timeStr === '17:30') {
+                            sendNotification(t('notifications'), t('goldCloseMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            lastNotifiedEvent.value = eventKey;
+                        }
+                        else if (timeStr === '23:00') {
+                            sendNotification(t('notifications'), t('spCloseMsg') + '\n' + t('portfolioValueMsg') + portfolioValueStr);
+                            lastNotifiedEvent.value = eventKey;
+                        }
+                    };
+
+                    // Timer for clock monitoring
+                    setInterval(checkMarketEvents, 30000); 
 
                     // Heatmap style based on asset value relative to portfolio
                     const getHeatmapStyle = (asset) => {
@@ -4628,7 +4737,12 @@ Görevlerin:
                         isAuthLoading,
                         isSyncing,
                         login,
-                        logout
+                        logout,
+                        // Notifications
+                        notificationsEnabled,
+                        notificationPermission,
+                        requestNotificationPermission,
+                        sendNotification
                     };
                 }
             }).mount('#app');

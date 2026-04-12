@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finance-tracker-v4.1.1';
+const CACHE_NAME = 'finance-tracker-v4.1.2';
 const urlsToCache = [
     './',
     './index.html',
@@ -62,5 +62,24 @@ self.addEventListener('fetch', (event) => {
                 // If network fails (offline), try the cache
                 return caches.match(event.request);
             })
+    );
+});
+
+// Notification click event
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            if (clientList.length > 0) {
+                let client = clientList[0];
+                for (let i = 0; i < clientList.length; i++) {
+                    if (clientList[i].focused) {
+                        client = clientList[i];
+                    }
+                }
+                return client.focus();
+            }
+            return clients.openWindow('./');
+        })
     );
 });
