@@ -233,22 +233,46 @@
             appearance: textfield;
         }
 
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
+        /* Custom Global Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
         }
 
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 3px;
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.2);
         }
 
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: rgba(100, 116, 139, 0.5);
-            border-radius: 3px;
+        ::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.3);
+            border-radius: 20px;
+            border: 3px solid rgba(15, 23, 42, 0.1);
+            transition: all 0.3s ease;
         }
 
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: rgba(100, 116, 139, 0.7);
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(96, 165, 250, 0.5);
+            border-width: 2px;
+        }
+
+        /* Firefox Support */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(71, 85, 105, 0.3) rgba(15, 23, 42, 0.2);
+        }
+
+        /* Light Theme Scrollbar Adjustments */
+        .light-theme ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.5);
+        }
+
+        .light-theme ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-color: #f8fafc;
+        }
+
+        .light-theme ::-webkit-scrollbar-thumb:hover {
+            background: rgba(96, 165, 250, 0.6);
         }
 
         .line-clamp-2 {
