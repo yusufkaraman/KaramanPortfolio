@@ -2728,18 +2728,21 @@ Görevlerin:
                     const sendNotification = (title, body) => {
                         if (notificationPermission.value !== 'granted' || !notificationsEnabled.value) return;
 
+                        // Use absolute URL for icons to ensure they show up on mobile
+                        const iconUrl = new URL('./icon-512.png', window.location.href).href;
+
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.ready.then(registration => {
                                 registration.showNotification(title, {
                                     body: body,
-                                    icon: './icon-512.png',
-                                    badge: './icon-512.png',
+                                    icon: iconUrl,
+                                    badge: iconUrl,
                                     vibrate: [200, 100, 200],
                                     tag: 'market-event'
                                 });
                             });
                         } else {
-                            new Notification(title, { body, icon: './icon-512.png' });
+                            new Notification(title, { body, icon: iconUrl });
                         }
                     };
 
