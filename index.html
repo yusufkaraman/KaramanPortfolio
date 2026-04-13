@@ -1756,6 +1756,7 @@
                                 <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300"
                                     :class="showDebugConsole ? 'left-7' : 'left-1'"></div>
                             </button>
+                        </div>
                         <!-- Notifications Toggle -->
                         <div class="flex items-center justify-between py-2 border-t border-dark-600 mt-2 pt-3">
                             <div class="flex items-center gap-2">
@@ -2627,6 +2628,7 @@ Görevlerin:
                             changeStr = `\n${t('dailyChangeMsg')} ${dailyChange.isPositive ? '▲' : '▼'} %${dailyChange.percent}`;
                         }
 
+                        const portfolioValueStr = formatCurrencyDisplay(totalCurrentValue.value);
                         const bodyMsg = t('portfolioValueMsg') + portfolioValueStr + changeStr;
 
                         if (timeStr === '09:00') {
